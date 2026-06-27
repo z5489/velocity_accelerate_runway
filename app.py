@@ -477,29 +477,22 @@ def fetch_and_prepare_all_data(selected_date):
 def compute_scores(cohort_list, mode):
     if not cohort_list:
         return []
-        
-    velocities = [item['velocity'] for item in cohort_list]
-    accelerations = [item['acceleration'] for item in cohort_list]
-    
-    min_vel, max_vel = min(velocities), max(velocities)
-    min_acc, max_acc = min(accelerations), max(accelerations)
-    
-    vel_range = max_vel - min_vel if max_vel != min_vel else 1.0
-    acc_range = max_acc - min_acc if max_acc != min_acc else 1.0
-    
+
     scored_cohort = []
     for item in cohort_list:
         ticker = item['ticker']
         v_raw = item['velocity']
         a_raw = item['acceleration']
         rsi_raw = item['rsi']
-        
-        # Velocity Normalization (0-100)
-        v_score = 100.0 * (v_raw - min_vel) / vel_range
-        
-        # Acceleration Normalization (0-100)
-        a_score = 100.0 * (a_raw - min_acc) / acc_range
-        
+
+        # Velocity Score — fixed absolute threshold:
+        # Any 5-day ROC >= 5% is a perfect 100; scales linearly below that.
+        v_score = min(100.0, max(0.0, (v_raw / 5.0) * 100.0))
+
+        # Acceleration Score — fixed absolute threshold:
+        # Any positive MACD hist delta (momentum increasing) = 100; negative = 30.
+        a_score = 100.0 if a_raw > 0 else 30.0
+
         # Runway Scores (Continuous functions based on active profile)
         if mode == "Aggressive Momentum Chaser":
             if rsi_raw <= 80:
@@ -507,23 +500,23 @@ def compute_scores(cohort_list, mode):
             else:
                 r_score = max(0.0, 100.0 * (100.0 - rsi_raw) / 20.0)
             w_v, w_a, w_r = 0.40, 0.40, 0.20
-            
+
         elif mode == "Balanced Swing Trader":
             # Gaussian peak at RSI 60
             r_score = 100.0 * np.exp(-((rsi_raw - 60.0) ** 2) / (2.0 * (15.0 ** 2)))
             w_v, w_a, w_r = 0.35, 0.35, 0.30
-            
-        else: # Mean-Reversion Trader
+
+        else:  # Mean-Reversion Trader
             # Higher score for lower RSI
             if rsi_raw <= 30:
                 r_score = 100.0
             else:
                 r_score = max(0.0, 100.0 * (100.0 - rsi_raw) / 70.0)
             w_v, w_a, w_r = 0.15, 0.35, 0.50
-            
+
         # Total probability score calculation
         total_score = w_v * v_score + w_a * a_score + w_r * r_score
-        
+
         scored_cohort.append({
             'Ticker': ticker,
             'Total Score': round(total_score, 1),
@@ -535,7 +528,7 @@ def compute_scores(cohort_list, mode):
             'MACD Hist Delta': round(a_raw, 5),
             'RSI': round(rsi_raw, 1)
         })
-        
+
     # Sort from highest to lowest score
     return sorted(scored_cohort, key=lambda x: x['Total Score'], reverse=True)
 
