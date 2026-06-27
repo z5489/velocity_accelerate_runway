@@ -56,3 +56,19 @@ Where:
    * **Balanced Swing**: Gaussian bell curve centered at RSI 60 with standard deviation 15:
      $$S_{runway} = 100 \cdot \exp\left(-\frac{(RSI - 60)^2}{2 \cdot 15^2}\right)$$
    * **Mean-Reversion**: Inverted linear decay. Maximum score of 100 if $RSI \le 30$. Linear decay to 0 for higher RSIs.
+
+---
+
+## ⚙️ Automated Ticker Fetcher & Batching
+
+To support thousands of stock tickers dynamically, the workspace features an automated parallel data fetcher pipeline:
+
+* **Parallel Matrix Jobs**: The [.github/workflows/fetch_data.yml](file:///.github/workflows/fetch_data.yml) workflow runs parallel jobs across 10 matrix runners to download and compute technical metrics concurrently.
+* **Thread-Safe Fetching**: The [fetch_data.py](file:///fetch_data.py) script retrieves price history thread-safely via `yf.Ticker().history()` and extracts latest indicators (Close, Velocity ROC%, Acceleration MACD Hist Delta, RSI) without storing heavy raw history on disk.
+* **Historical Date Selector**: Pre-calculated daily batch summaries (`batch_summary_<batch_index>_<date>.csv`) are saved to the repo. A **Date Selector** in the dashboard sidebar lets users select any date to navigate back and browse past ranks.
+
+---
+
+## 📝 Changelog
+
+Please refer to the separate [CHANGELOG.md](file:///c:/Users/ziyen/velocity_accelerate_runway/CHANGELOG.md) file for the full history of previous commits and details of the current updates.

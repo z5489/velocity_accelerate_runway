@@ -236,9 +236,20 @@ def clean_ticker_name(filename):
     return cleaned.strip().upper()
 
 
+# Load tickers list from tickers.txt with fallback
+def get_tickers():
+    tickers_file = "tickers.txt"
+    if os.path.exists(tickers_file):
+        with open(tickers_file, "r") as f:
+            tickers = [line.strip().upper() for line in f if line.strip() and not line.strip().startswith("#")]
+            if tickers:
+                return tickers
+    return ["TSLA", "MSFT", "AAPL", "NVDA", "AMZN", "GOOGL", "META", "BP.L", "AZN.L", "VOD.L", "LSEG.L"]
+
+
 # Fallback/Mock Data Generator
 def generate_mock_data():
-    tickers = ["TSLA", "MSFT", "AAPL", "NVDA", "AMZN", "GOOGL", "META", "BP.L", "AZN.L", "VOD.L", "LSEG.L"]
+    tickers = get_tickers()
     np.random.seed(42)
     dates = pd.date_range(end=datetime.now(), periods=250, freq='B')
     
@@ -269,20 +280,20 @@ def generate_mock_data():
 
 # Download universe data from Yahoo Finance
 def download_default_data():
-    tickers = ["TSLA", "MSFT", "AAPL", "NVDA", "AMZN", "GOOGL", "META", "BP.L", "AZN.L", "VOD.L", "LSEG.L"]
+    tickers = get_tickers()
     downloaded_any = False
     
     for ticker in tickers:
         try:
-            # Download 1.5 years to ensure enough data for rolling calculations
-            df = yf.download(ticker, period="18m", interval="1d", progress=False)
+            # Download 2 years to ensure enough data for rolling calculations
+            df = yf.Ticker(ticker).history(period="2y")
             if not df.empty:
                 df = df.reset_index()
-                # Clean columns (flatten MultiIndex if present)
-                df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
-                filename = f"LSE_DLY_{ticker}.csv"
-                df.to_csv(filename, index=False)
-                downloaded_any = True
+                if 'Date' in df.columns:
+                    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
+                    filename = f"LSE_DLY_{ticker}.csv"
+                    df.to_csv(filename, index=False)
+                    downloaded_any = True
         except Exception:
             pass
             
@@ -358,62 +369,78 @@ def calculate_macd(prices):
 
 # Fetch & calculate all metrics (Cached)
 @st.cache_data(ttl=600)
-def fetch_and_prepare_all_data():
-    local_files = glob.glob("LSE_DLY_*.csv")
-    
-    if not local_files:
-        download_default_data()
-        local_files = glob.glob("LSE_DLY_*.csv")
-        
-    all_data = {}
+def fetch_and_prepare_all_data(selected_date):
     cohort_list = []
     
-    for filepath in local_files:
-        ticker = clean_ticker_name(filepath)
-        try:
-            df = load_ticker_data(filepath)
-            if len(df) < 35:
-                continue
+    # 1. Search for batch summary files for the selected date
+    if selected_date == "local":
+        summary_files = ["batch_summary_local.csv"] if os.path.exists("batch_summary_local.csv") else []
+    else:
+        summary_files = glob.glob(f"batch_summary_*_{selected_date}.csv")
+        
+    if summary_files:
+        for filepath in summary_files:
+            try:
+                sdf = pd.read_csv(filepath)
+                # Ensure we have the required columns
+                required_cols = {'ticker', 'close', 'velocity', 'acceleration', 'rsi'}
+                if required_cols.issubset(sdf.columns):
+                    for _, row in sdf.iterrows():
+                        cohort_list.append({
+                            'ticker': str(row['ticker']),
+                            'close': float(row['close']),
+                            'velocity': float(row['velocity']),
+                            'acceleration': float(row['acceleration']),
+                            'rsi': float(row['rsi'])
+                        })
+            except Exception:
+                pass
                 
-            # Compute indicators
-            df['RSI'] = calculate_rsi(df['Close'])
-            macd_line, signal_line, macd_hist, hist_delta = calculate_macd(df['Close'])
-            df['MACD'] = macd_line
-            df['Signal'] = signal_line
-            df['MACD_Hist'] = macd_hist
-            df['Hist_Delta'] = hist_delta
+    # 2. If no summary files are found for that date, fallback to individual CSV parsing (for local dev)
+    if not cohort_list:
+        local_files = glob.glob("LSE_DLY_*.csv")
+        if not local_files:
+            download_default_data()
+            local_files = glob.glob("LSE_DLY_*.csv")
             
-            latest_idx = df.index[-1]
-            close_price = df.loc[latest_idx, 'Close']
-            
-            # 5-Day ROC% (Velocity)
-            v_val = ((close_price - df.loc[df.index[-6], 'Close']) / df.loc[df.index[-6], 'Close']) * 100
-            
-            # Acceleration Delta
-            a_val = df.loc[latest_idx, 'Hist_Delta']
-            
-            # Runway RSI
-            rsi_val = df.loc[latest_idx, 'RSI']
-            
-            # Handle possible NaNs in calculations
-            if np.isnan(v_val): v_val = 0.0
-            if np.isnan(a_val): a_val = 0.0
-            if np.isnan(rsi_val): rsi_val = 50.0
-            
-            cohort_list.append({
-                'ticker': ticker,
-                'close': close_price,
-                'velocity': v_val,
-                'acceleration': a_val,
-                'rsi': rsi_val
-            })
-            
-            all_data[ticker] = df
-            
-        except Exception:
-            pass
-            
-    return all_data, cohort_list
+        for filepath in local_files:
+            ticker = clean_ticker_name(filepath)
+            try:
+                df = load_ticker_data(filepath)
+                if len(df) < 35:
+                    continue
+                df['RSI'] = calculate_rsi(df['Close'])
+                _, _, _, hist_delta = calculate_macd(df['Close'])
+                latest_idx = df.index[-1]
+                close_price = df.loc[latest_idx, 'Close']
+                v_val = ((close_price - df.loc[df.index[-6], 'Close']) / df.loc[df.index[-6], 'Close']) * 100
+                a_val = hist_delta.iloc[latest_idx]
+                rsi_val = df.loc[latest_idx, 'RSI']
+                
+                if np.isnan(v_val): v_val = 0.0
+                if np.isnan(a_val): a_val = 0.0
+                if np.isnan(rsi_val): rsi_val = 50.0
+                
+                cohort_list.append({
+                    'ticker': ticker,
+                    'close': close_price,
+                    'velocity': v_val,
+                    'acceleration': a_val,
+                    'rsi': rsi_val
+                })
+            except Exception:
+                pass
+                
+        # Save a local summary for subsequent instant loads
+        if cohort_list:
+            try:
+                local_summary = pd.DataFrame(cohort_list)
+                local_summary.to_csv("batch_summary_local.csv", index=False)
+            except Exception:
+                pass
+                
+    # Return empty dict for all_data to preserve unpacking signature: all_data, cohort_list
+    return {}, cohort_list
 
 
 # Calculation of final scoring based on Mode
@@ -569,7 +596,29 @@ def create_plotly_chart(df, ticker, mode):
 
 
 # Streamlit Execution Setup
-all_data, cohort_list = fetch_and_prepare_all_data()
+# ----------------- DATE SELECTOR SETUP -----------------
+import re
+summary_files = glob.glob("batch_summary_*_*.csv")
+dates = set()
+for f in summary_files:
+    match = re.search(r"batch_summary_\d+_(\d{4}-\d{2}-\d{2})\.csv$", f)
+    if match:
+        dates.add(match.group(1))
+
+# Also check for local summary if it exists
+if os.path.exists("batch_summary_local.csv"):
+    dates.add("local")
+
+if dates:
+    sorted_dates = sorted(list(dates), reverse=True)
+    st.sidebar.markdown("<h2 style='margin-bottom:0;'>📅 ANALYSIS DATE</h2>", unsafe_allow_html=True)
+    selected_date_str = st.sidebar.selectbox("Select historical date:", sorted_dates, index=0)
+else:
+    selected_date_str = datetime.now().strftime('%Y-%m-%d')
+    st.sidebar.markdown("<h2 style='margin-bottom:0;'>📅 ANALYSIS DATE</h2>", unsafe_allow_html=True)
+    st.sidebar.info(f"No summary CSVs found. Using today's date: {selected_date_str}")
+
+all_data, cohort_list = fetch_and_prepare_all_data(selected_date_str)
 
 # ----------------- SIDEBAR CONFIG -----------------
 st.sidebar.markdown("<h2 style='margin-bottom:0;'>⚙️ PROFILE ENGINE</h2>", unsafe_allow_html=True)
@@ -689,7 +738,20 @@ if scored_cohort:
     
     # Get details for selected ticker
     ticker_details = next((x for x in scored_cohort if x['Ticker'] == selected_ticker), None)
-    df_ticker = all_data.get(selected_ticker)
+    # Download and compute metrics for the selected ticker on-demand
+    try:
+        df_ticker = yf.Ticker(selected_ticker).history(period="2y").reset_index()
+        if 'Date' in df_ticker.columns:
+            df_ticker['Date'] = pd.to_datetime(df_ticker['Date']).dt.tz_localize(None)
+            if selected_date_str != "local":
+                try:
+                    selected_dt = pd.to_datetime(selected_date_str)
+                    df_ticker = df_ticker[df_ticker['Date'] <= selected_dt]
+                except Exception:
+                    pass
+            df_ticker['RSI'] = calculate_rsi(df_ticker['Close'])
+    except Exception:
+        df_ticker = None
     
     if ticker_details and df_ticker is not None:
         # Create Metric Grid
