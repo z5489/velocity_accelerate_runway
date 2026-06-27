@@ -7,6 +7,7 @@ import yfinance as yf
 import glob
 import os
 import re
+import random
 from datetime import datetime
 
 # Set page config
@@ -717,7 +718,13 @@ with col_indicator:
 
 # Recalculate cohort rankings
 scored_cohort = compute_scores(cohort_list, active_mode)
-top_ticker_data = scored_cohort[0] if scored_cohort else None
+# If multiple tickers share the top score, pick one randomly so all tied tickers get exposure
+if scored_cohort:
+    top_score = scored_cohort[0]['Total Score']
+    top_candidates = [x for x in scored_cohort if x['Total Score'] == top_score]
+    top_ticker_data = random.choice(top_candidates)
+else:
+    top_ticker_data = None
 
 # Banner Setup
 if top_ticker_data and top_ticker_data['Total Score'] >= 75.0:
@@ -766,10 +773,12 @@ st.write("Select a ticker to explore historical chart timelines and signal metri
 
 if scored_cohort:
     tickers_list = [x['Ticker'] for x in scored_cohort]
+    # Pre-select the same randomly chosen top ticker shown in the banner
+    default_index = tickers_list.index(top_ticker_data['Ticker']) if top_ticker_data and top_ticker_data['Ticker'] in tickers_list else 0
     selected_ticker = st.selectbox(
         "Select Ticker for Profile Analysis:",
         tickers_list,
-        index=0  # Pre-select highest ranked ticker
+        index=default_index
     )
     
     # Get details for selected ticker
