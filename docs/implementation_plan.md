@@ -49,7 +49,7 @@ RSI is calculated over 14 periods. The runway score $S_{runway}$ is calculated u
 
 ### [Component Name] Dashboard App
 
-#### [NEW] [app.py](file:///c:/Users/ziyen/velocity_acceleration_runway/app.py)
+#### [NEW] [app.py](../app.py)
 Streamlit web application with:
 1. **Background Yahoo Finance Downloader**: Auto-generates local `LSE_DLY_*.csv` files for a list of popular tickers if none are found.
 2. **Dynamic Mode Toggle**: Sidebar configuration to change profiles and recalculate scores.

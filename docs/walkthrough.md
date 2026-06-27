@@ -1,6 +1,6 @@
 # Walkthrough - Quant Trading Signals Dashboard (Hologram)
 
-We have successfully built and verified the high-performance Streamlit dashboard, **Hologram**, located at [app.py](file:///c:/Users/ziyen/velocity_acceleration_runway/app.py).
+We have successfully built and verified the high-performance Streamlit dashboard, **Hologram**, located at [app.py](../app.py).
 
 The application is completely self-contained. Since the workspace started empty, the app automatically downloads historical daily data for a set of popular tickers (US: TSLA, MSFT, AAPL, NVDA, AMZN, GOOGL, META; UK: BP.L, AZN.L, VOD.L, LSEG.L) from Yahoo Finance, saves them as local `LSE_DLY_<TICKER>.csv` files, parses them, and computes high-fidelity quantitative indicators.
 
@@ -11,21 +11,21 @@ The application is completely self-contained. Since the workspace started empty,
 Below is a carousel showcasing the UI/UX design, active strategy configs, cohort leaderboards, custom metric cards, and interactive Plotly subplots.
 
 ````carousel
-![Hologram Dashboard - Initial Load (Balanced Swing Trader)](/C:/Users/ziyen/.gemini/antigravity-ide/brain/3ba536ca-0873-49c9-b971-a5ff75763aff/initial_load_1782516932621.png)
+![Hologram Dashboard - Initial Load (Balanced Swing Trader)](images/initial_load_1782516932621.png)
 <!-- slide -->
-![Aggressive Momentum Profile Selected - Recomputed Rankings](/C:/Users/ziyen/.gemini/antigravity-ide/brain/3ba536ca-0873-49c9-b971-a5ff75763aff/aggressive_momentum_1782516955594.png)
+![Aggressive Momentum Profile Selected - Recomputed Rankings](images/aggressive_momentum_1782516955594.png)
 <!-- slide -->
-![TSLA Deep-Dive Panel and Custom Metrics](/C:/Users/ziyen/.gemini/antigravity-ide/brain/3ba536ca-0873-49c9-b971-a5ff75763aff/tsla_deep_dive_1782516974369.png)
+![TSLA Deep-Dive Panel and Custom Metrics](images/tsla_deep_dive_1782516974369.png)
 <!-- slide -->
-![Interactive Candlestick and RSI Subplots](/C:/Users/ziyen/.gemini/antigravity-ide/brain/3ba536ca-0873-49c9-b971-a5ff75763aff/tsla_charts_1782516983702.png)
+![Interactive Candlestick and RSI Subplots](images/tsla_charts_1782516983702.png)
 <!-- slide -->
-![Mean Reversion Profile - Low RSI Scoring Inverse Functions](/C:/Users/ziyen/.gemini/antigravity-ide/brain/3ba536ca-0873-49c9-b971-a5ff75763aff/mean_reversion_1782517002416.png)
+![Mean Reversion Profile - Low RSI Scoring Inverse Functions](images/mean_reversion_1782517002416.png)
 ````
 
 ### 🎥 Verification Recording
 The complete interactive browser verification recording showing the strategy transitions, data re-sorting, and deep dive charts rendering can be viewed below:
 
-![Browser verification of trading dashboard](/C:/Users/ziyen/.gemini/antigravity-ide/brain/3ba536ca-0873-49c9-b971-a5ff75763aff/dashboard_ui_verification_1782516909190.webp)
+![Browser verification of trading dashboard](images/dashboard_ui_verification_1782516909190.webp)
 
 ---
 

@@ -23,7 +23,7 @@ Hologram is a high-performance Streamlit dashboard designed to visualize short-t
 
 ### 1. Clone & Navigate to Workspace
 ```powershell
-cd c:\Users\ziyen\velocity_acceleration_runway
+cd velocity_accelerate_runway
 ```
 
 ### 2. Install Required Dependencies
