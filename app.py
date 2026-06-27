@@ -73,7 +73,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 800;
     color: #ffffff;
     margin-bottom: 0.5rem;
-    background: linear-gradient(90deg, #ffffff, #94a3b8);
+    background: linear-gradient(90deg, #ffffff, #ffffff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -90,7 +90,7 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 2px 8px;
     border-radius: 8px;
-    color: #cbd5e1;
+    color: #ffffff;
 }
 
 .weight-tag span {
@@ -152,7 +152,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .top-setup-banner p {
     margin: 0;
-    color: #9ca3af;
+    color: #ffffff;
     font-size: 1rem;
 }
 
@@ -182,7 +182,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .metric-header {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 600;
@@ -199,7 +199,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .metric-sub {
     font-size: 0.9rem;
-    color: #94a3b8;
+    color: #ffffff;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -684,8 +684,8 @@ else:
 col_title, col_indicator = st.columns([3, 2])
 
 with col_title:
-    st.markdown("<h1 style='font-size:3rem; margin-bottom:0.2rem; background: linear-gradient(135deg, #38bdf8, #0284c7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>HOLOGRAM</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:1.15rem; color:#94a3b8; margin-top:0;'>High-Performance Quant Trading Signals Dashboard</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='font-size:3rem; margin-bottom:0.2rem; color: #ffffff;'>HOLOGRAM</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:1.15rem; color:#ffffff; margin-top:0;'>High-Performance Quant Trading Signals Dashboard</p>", unsafe_allow_html=True)
 
 with col_indicator:
     st.markdown(f"""
@@ -697,7 +697,7 @@ with col_indicator:
             <div class="weight-tag">Acc: <span>{w_a}%</span></div>
             <div class="weight-tag">Run: <span>{w_r}%</span></div>
         </div>
-        <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 0.75rem; font-style: italic; line-height: 1.3;">
+        <div style="font-size: 0.82rem; color: #ffffff; margin-top: 0.75rem; font-style: italic; line-height: 1.3;">
             {mode_desc}
         </div>
     </div>

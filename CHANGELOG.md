@@ -6,6 +6,7 @@ This document tracks all version commits and updates for the Hologram Quant Trad
 
 ### Bug Fixes
 * **Plotly SVG Path NaN Fix**: Resolved a rendering bug where the technical deep-dive chart would fail to display (remaining completely blank) and trigger browser SVG `NaN` path coordinate console errors. This was caused by initial `NaN` values from the rolling SMA averages (`MA20` and `MA50`) passing to Plotly's rendering engine. Moving averages are now computed first and all leading rows containing `NaN` values are dropped before rendering the candlestick and indicator traces.
+* **High Contrast Text Overrides**: Changed all grey-colored text (e.g. `#94a3b8`, `#9ca3af`, `#cbd5e1`) and background-clipped text gradients in headers, subtext, metrics, indicator badges, and the main title to high-contrast solid white (`#ffffff`). Added explicit white text CSS rules targeting markdown paragraphs, headers, list items, and custom indicator modules to guarantee clean readability against dark dashboard backgrounds.
 
 ---
 
