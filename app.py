@@ -222,6 +222,25 @@ hr {
     background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.08) 50%, rgba(255,255,255,0));
     margin: 2.5rem 0;
 }
+
+/* Ensure high contrast white text for readability against dark backgrounds */
+[data-testid="stSidebar"] label, 
+[data-testid="stSidebar"] p, 
+[data-testid="stSidebar"] span, 
+[data-testid="stSidebar"] h1, 
+[data-testid="stSidebar"] h2, 
+[data-testid="stSidebar"] h3,
+.profile-indicator *, 
+.top-setup-banner *, 
+.custom-metric-card *,
+.stMarkdown p, 
+.stMarkdown span,
+.stMarkdown li,
+.stMarkdown h1,
+.stMarkdown h2,
+.stMarkdown h3 {
+    color: #ffffff !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
