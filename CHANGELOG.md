@@ -4,23 +4,26 @@ This document tracks all version commits and updates for the Hologram Quant Trad
 
 ## Current Changes (To Be Committed)
 
-### Parallel Batch Fetching & Automation
-* **Unified Universe configuration**: Extracted the default stock ticker universe to [tickers.txt](file:///tickers.txt) for simple user updates.
-* **Batch Fetcher Script**: Created [fetch_data.py](file:///fetch_data.py) to support parallel batch fetching with multi-threaded downloads, indicator computing, and date-stamped summaries.
-* **GitHub Actions Workflow**: Created [.github/workflows/fetch_data.yml](file:///.github/workflows/fetch_data.yml) to automate data updates. It fetches daily weekday data at 11 PM UTC in parallel and commits batch summaries back to the repository.
-* **Historical Date Selector**: Added a **📅 Analysis Date** sidebar selectbox in [app.py](file:///app.py) to load historical summary states.
-* **On-Demand Deep-Dive**: Refactored the dashboard deep-dive charts to query Yahoo Finance on-the-fly, aligned to the selected date.
-* **Weekend Filters**: Integrated weekend filters to automatically fetch Friday close data if run on Saturdays or Sundays.
-* **Workflow Dependencies Caching**: Added [requirements.txt](file:///requirements.txt) to track package requirements and configured workflow caching via `actions/setup-python` in both workflow jobs to optimize run times and prevent import errors.
-* **Summary Consolidation & Output Directory**: Configured the GitHub Actions workflow to aggregate all parallel matrix batch summaries into a single consolidated `output/summary_<date>.csv` file, sorting by ticker to ensure clean, minimal diffs. Stored summaries in a dedicated `output/` folder and updated the Streamlit dashboard to load files from this folder.
+### Bug Fixes
+* **Plotly SVG Path NaN Fix**: Resolved a rendering bug where the technical deep-dive chart would fail to display (remaining completely blank) and trigger browser SVG `NaN` path coordinate console errors. This was caused by initial `NaN` values from the rolling SMA averages (`MA20` and `MA50`) passing to Plotly's rendering engine. Moving averages are now computed first and all leading rows containing `NaN` values are dropped before rendering the candlestick and indicator traces.
 
 ---
 
 ## Previous Commits
 
-### Clean up (Local paths & media)
-* Localized walkthrough images to [docs/images/](file:///docs/images/) and replaced hardcoded absolute file links with relative paths.
-* Cleaned up personal file paths from [README.md](file:///README.md) and documentation.
+### d2242dd - Update stock data CSVs and summaries (Daily Automatic Fetch)
+* Daily automated weekday run fetching closing price data and updating summaries.
+
+### baa6e96 - Install dependencies in commit-and-push workflow job to fix pandas module error
+* Configured workflow step python environment setup and requirement installation to prevent module error.
+
+### 535fcdb - Aggregated old root batch summaries into output/summary_2026-06-26.csv and removed original files
+* Combined parallel chunk files into a single alphabetical aggregated summary and deleted root files.
+
+### cad7a88 - Add ability to batch fetch data
+* Extracted stock universe list to `tickers.txt` and built `fetch_data.py` to support matrix parallel batch chunks.
+* Configured `.github/workflows/fetch_data.yml` to automate daily fetching.
+* Swapped sidebar controls to support loading historical date summaries and pulling deep-dive details dynamically on-demand.
 
 ### cabc359 - MVP Velocity Acceleration Runway dashboard
 * Created [app.py](file:///app.py) Streamlit application.

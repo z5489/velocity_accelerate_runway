@@ -523,6 +523,14 @@ def compute_scores(cohort_list, mode):
 
 # Plotly rendering
 def create_plotly_chart(df, ticker, mode):
+    # Calculate Moving Averages first
+    df = df.copy()
+    df['MA20'] = df['Close'].rolling(20).mean()
+    df['MA50'] = df['Close'].rolling(50).mean()
+    
+    # Drop initial NaN rows to prevent Plotly path rendering NaN crashes in the browser
+    df = df.dropna(subset=['MA50']).copy()
+    
     fig = make_subplots(
         rows=2, cols=1, 
         shared_xaxes=True, 
@@ -544,10 +552,6 @@ def create_plotly_chart(df, ticker, mode):
         ),
         row=1, col=1
     )
-    
-    # Add Moving Averages
-    df['MA20'] = df['Close'].rolling(20).mean()
-    df['MA50'] = df['Close'].rolling(50).mean()
     
     fig.add_trace(
         go.Scatter(x=df['Date'], y=df['MA20'], name='20-Day SMA', line=dict(color='#0ea5e9', width=1.5)),
