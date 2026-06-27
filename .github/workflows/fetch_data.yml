@@ -87,20 +87,49 @@ jobs:
         with:
           path: downloaded-artifacts
 
-      - name: Merge and Copy Files to Workspace Root
+      - name: Combine and Merge Batch Summaries
         run: |
-          # Copy all downloaded CSV files to the root workspace
-          find downloaded-artifacts -name "*.csv" -exec cp -t . {} +
+          python -c "
+          import glob, pandas as pd, re, os
+          csv_files = glob.glob('downloaded-artifacts/**/*.csv', recursive=True)
+          if csv_files:
+              # Extract date from one of the files
+              date_str = 'local'
+              for f in csv_files:
+                  match = re.search(r'batch_summary_\d+_(\d{4}-\d{2}-\d{2})\.csv', f)
+                  if match:
+                      date_str = match.group(1)
+                      break
+              
+              # Read and concat new batch data
+              dfs = [pd.read_csv(f) for f in csv_files]
+              new_df = pd.concat(dfs, ignore_index=True)
+              
+              # Load existing consolidated summary if it exists
+              os.makedirs('output', exist_ok=True)
+              output_file = os.path.join('output', f'summary_{date_str}.csv')
+              if os.path.exists(output_file):
+                  existing_df = pd.read_csv(output_file)
+                  combined = pd.concat([existing_df, new_df], ignore_index=True)
+                  combined = combined.drop_duplicates(subset=['ticker'], keep='last')
+              else:
+                  combined = new_df
+              
+              # Sort by ticker name for clean diffs
+              combined = combined.sort_values(by='ticker').reset_index(drop=True)
+              combined.to_csv(output_file, index=False)
+              print(f'Successfully consolidated and saved to {output_file} with {len(combined)} tickers.')
+          else:
+              print('No CSV batch summaries found to aggregate.')
+          "
           # Clean up temporary downloads directory
           rm -rf downloaded-artifacts
-          echo "Merged files:"
-          ls -la batch_summary_*.csv || echo "No batch summaries found"
 
       - name: Commit and Push Updated Data
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
-          git add batch_summary_*.csv
+          git add output/summary_*.csv
           # Only commit and push if there are changes
           if ! git diff --cached --quiet; then
             git commit -m "Update stock data CSVs and summaries (Daily Automatic Fetch) [skip ci]"

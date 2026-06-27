@@ -372,11 +372,21 @@ def calculate_macd(prices):
 def fetch_and_prepare_all_data(selected_date):
     cohort_list = []
     
-    # 1. Search for batch summary files for the selected date
+    # 1. Search for aggregated summary file or batch files for the selected date
     if selected_date == "local":
-        summary_files = ["batch_summary_local.csv"] if os.path.exists("batch_summary_local.csv") else []
+        summary_file = os.path.join("output", "summary_local.csv")
+        if os.path.exists(summary_file):
+            summary_files = [summary_file]
+        elif os.path.exists("batch_summary_local.csv"):
+            summary_files = ["batch_summary_local.csv"]
+        else:
+            summary_files = []
     else:
-        summary_files = glob.glob(f"batch_summary_*_{selected_date}.csv")
+        summary_file = os.path.join("output", f"summary_{selected_date}.csv")
+        if os.path.exists(summary_file):
+            summary_files = [summary_file]
+        else:
+            summary_files = glob.glob(f"batch_summary_*_{selected_date}.csv")
         
     if summary_files:
         for filepath in summary_files:
@@ -434,8 +444,9 @@ def fetch_and_prepare_all_data(selected_date):
         # Save a local summary for subsequent instant loads
         if cohort_list:
             try:
+                os.makedirs("output", exist_ok=True)
                 local_summary = pd.DataFrame(cohort_list)
-                local_summary.to_csv("batch_summary_local.csv", index=False)
+                local_summary.to_csv(os.path.join("output", "summary_local.csv"), index=False)
             except Exception:
                 pass
                 
@@ -598,15 +609,24 @@ def create_plotly_chart(df, ticker, mode):
 # Streamlit Execution Setup
 # ----------------- DATE SELECTOR SETUP -----------------
 import re
-summary_files = glob.glob("batch_summary_*_*.csv")
 dates = set()
-for f in summary_files:
+
+# Scan output folder for aggregated summaries
+output_summaries = glob.glob(os.path.join("output", "summary_*.csv"))
+for f in output_summaries:
+    match = re.search(r"summary_(\d{4}-\d{2}-\d{2})\.csv$", f)
+    if match:
+        dates.add(match.group(1))
+
+# Scan root folder for batch summaries (backward compatibility)
+batch_summaries = glob.glob("batch_summary_*_*.csv")
+for f in batch_summaries:
     match = re.search(r"batch_summary_\d+_(\d{4}-\d{2}-\d{2})\.csv$", f)
     if match:
         dates.add(match.group(1))
 
-# Also check for local summary if it exists
-if os.path.exists("batch_summary_local.csv"):
+# Also check for local summaries if they exist
+if os.path.exists(os.path.join("output", "summary_local.csv")) or os.path.exists("batch_summary_local.csv"):
     dates.add("local")
 
 if dates:

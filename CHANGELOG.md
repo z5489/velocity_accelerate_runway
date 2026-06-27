@@ -12,6 +12,7 @@ This document tracks all version commits and updates for the Hologram Quant Trad
 * **On-Demand Deep-Dive**: Refactored the dashboard deep-dive charts to query Yahoo Finance on-the-fly, aligned to the selected date.
 * **Weekend Filters**: Integrated weekend filters to automatically fetch Friday close data if run on Saturdays or Sundays.
 * **Workflow Dependencies Caching**: Added [requirements.txt](file:///requirements.txt) to track package requirements and configured workflow caching via `actions/setup-python` to optimize job execution times.
+* **Summary Consolidation & Output Directory**: Configured the GitHub Actions workflow to aggregate all parallel matrix batch summaries into a single consolidated `output/summary_<date>.csv` file, sorting by ticker to ensure clean, minimal diffs. Stored summaries in a dedicated `output/` folder and updated the Streamlit dashboard to load files from this folder.
 
 ---
 
