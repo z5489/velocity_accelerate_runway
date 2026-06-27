@@ -27,11 +27,15 @@ def calculate_macd(prices):
     hist_delta = macd_hist.diff(1)
     return macd_line, signal_line, macd_hist, hist_delta
 
-def get_tickers():
-    tickers_file = "tickers.txt"
+def get_tickers(tickers_file="tickers.txt"):
     if os.path.exists(tickers_file):
         with open(tickers_file, "r") as f:
-            tickers = [line.strip().upper() for line in f if line.strip() and not line.strip().startswith("#")]
+            tickers = []
+            for line in f:
+                # Remove inline comments and strip whitespace
+                part = line.split("#")[0].strip().upper()
+                if part:
+                    tickers.append(part)
             if tickers:
                 return tickers
     # Default fallback
@@ -138,9 +142,10 @@ def main():
     parser.add_argument("--batch-index", type=int, default=0, help="Zero-based index of the batch to run")
     parser.add_argument("--total-batches", type=int, default=1, help="Total number of batches the list is split into")
     parser.add_argument("--threads", type=int, default=15, help="Number of concurrent downloader threads")
+    parser.add_argument("--ticker-file", type=str, default="tickers.txt", help="Path to text file containing tickers")
     args = parser.parse_args()
 
-    tickers = get_tickers()
+    tickers = get_tickers(args.ticker_file)
     total_tickers = len(tickers)
     
     # Calculate batch chunk boundaries
@@ -153,7 +158,7 @@ def main():
         return
         
     batch_tickers = tickers[start_idx:end_idx]
-    print(f"Batch {args.batch_index}/{args.total_batches}: Fetching {len(batch_tickers)} tickers out of {total_tickers} (indices {start_idx} to {end_idx-1})")
+    print(f"Batch {args.batch_index}/{args.total_batches}: Fetching {len(batch_tickers)} tickers from {args.ticker_file} out of {total_tickers} (indices {start_idx} to {end_idx-1})")
     
     summary_results = []
     latest_dates = []
@@ -186,7 +191,12 @@ def main():
         summary_df = pd.DataFrame(summary_results)
         # Ensure exact column ordering
         summary_df = summary_df[['ticker', 'close', 'velocity', 'acceleration', 'rsi']]
-        summary_filename = f"batch_summary_{args.batch_index}_{fetch_date}.csv"
+        
+        # Name file according to the custom ticker file used
+        base_name = os.path.splitext(os.path.basename(args.ticker_file))[0]
+        prefix = "batch_summary" if base_name == "tickers" else f"batch_summary_{base_name}"
+        summary_filename = f"{prefix}_{args.batch_index}_{fetch_date}.csv"
+        
         summary_df.to_csv(summary_filename, index=False)
         print(f"\n--- Batch {args.batch_index} Summary saved to {summary_filename} ({len(summary_df)} tickers successfully saved) ---")
     else:

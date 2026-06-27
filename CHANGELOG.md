@@ -4,32 +4,33 @@ This document tracks all version commits and updates for the Hologram Quant Trad
 
 ## Current Changes (To Be Committed)
 
-### Bug Fixes
-* **Plotly SVG Path NaN Fix**: Resolved a rendering bug where the technical deep-dive chart would fail to display (remaining completely blank) and trigger browser SVG `NaN` path coordinate console errors. This was caused by initial `NaN` values from the rolling SMA averages (`MA20` and `MA50`) passing to Plotly's rendering engine. Moving averages are now computed first and all leading rows containing `NaN` values are dropped before rendering the candlestick and indicator traces.
-* **High Contrast Text Overrides**: Changed all grey-colored text (e.g. `#94a3b8`, `#9ca3af`, `#cbd5e1`) and background-clipped text gradients in headers, subtext, metrics, indicator badges, and the main title to high-contrast solid white (`#ffffff`). Added explicit white text CSS rules targeting markdown paragraphs, headers, list items, and custom indicator modules to guarantee clean readability against dark dashboard backgrounds.
+### Feature Additions & Multi-Universe Support
+* **UK ETFs Universe**: Configured a new list of highly liquid UK ETF tickers in `uk_etfs.txt`.
+* **Multi-Universe Selector**: Added a "Select Ticker Universe" dropdown to the sidebar in [app.py](file:///app.py) allowing users to switch dynamically between "US Stocks" and "UK ETFs".
+* **Output Consolidator**: Created [consolidate.py](file:///consolidate.py) to aggregate parallel batch files grouped by date and universe suffix.
+* **GitHub Actions Multi-Universe Pipeline**: Configured [.github/workflows/fetch_data.yml](file:///.github/workflows/fetch_data.yml) to fetch both universes in parallel and consolidate them separately into `output/summary_{date}.csv` and `output/summary_uk_etfs_{date}.csv`.
+* **Inline Comments Support**: Updated the ticker list parser to strip inline comments so tickers can be annotated in place.
 
 ---
 
 ## Previous Commits
 
+### abfec57 - Randomly select from all tied top-score tickers instead of always picking first
+* Added random selection from all tied top-score tickers to prevent alphabetical bias in the banner and deep-dive selectbox.
+
+### d4dab08 - Switch scoring from relative cohort scaling to fixed absolute thresholds
+* Replaced relative min/max cohort scaling with fixed absolute metrics: a 5% 5-day ROC yields 100 on velocity, and a positive MACD hist delta yields 100 on acceleration.
+
+### 7c65cea - Update dashboard text colors and headings to high-contrast white for readability
+* Changed all grey-colored text and gradients in headers, subtext, metrics, indicator badges, and the main title to high-contrast solid white.
+
+### 8a7c7a6 - Fix Plotly rendering NaN coordinate bug in candlestick chart
+* Calculated moving averages first and dropped initial NaN rows before passing to Plotly, resolving SVG path rendering issues in the browser.
+
 ### d2242dd - Update stock data CSVs and summaries (Daily Automatic Fetch)
 * Daily automated weekday run fetching closing price data and updating summaries.
-
-### baa6e96 - Install dependencies in commit-and-push workflow job to fix pandas module error
-* Configured workflow step python environment setup and requirement installation to prevent module error.
-
-### 535fcdb - Aggregated old root batch summaries into output/summary_2026-06-26.csv and removed original files
-* Combined parallel chunk files into a single alphabetical aggregated summary and deleted root files.
-
-### cad7a88 - Add ability to batch fetch data
-* Extracted stock universe list to `tickers.txt` and built `fetch_data.py` to support matrix parallel batch chunks.
-* Configured `.github/workflows/fetch_data.yml` to automate daily fetching.
-* Swapped sidebar controls to support loading historical date summaries and pulling deep-dive details dynamically on-demand.
 
 ### cabc359 - MVP Velocity Acceleration Runway dashboard
 * Created [app.py](file:///app.py) Streamlit application.
 * Implemented the glassmorphic dark theme and custom Outfit fonts.
 * Added metric grids, Plots subplots (Candlesticks + SMA + RSI), and profile engines (Aggressive Momentum, Balanced Swing, Mean-Reversion).
-
-### 05fa345 - First MVP
-* Initialized repository layout and configuration.

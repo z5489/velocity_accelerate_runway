@@ -256,20 +256,29 @@ def clean_ticker_name(filename):
     return cleaned.strip().upper()
 
 
-# Load tickers list from tickers.txt with fallback
-def get_tickers():
-    tickers_file = "tickers.txt"
+# Load tickers list from tickers.txt or uk_etfs.txt with fallback
+def get_tickers(universe_prefix="summary"):
+    tickers_file = "uk_etfs.txt" if universe_prefix == "summary_uk_etfs" else "tickers.txt"
     if os.path.exists(tickers_file):
         with open(tickers_file, "r") as f:
-            tickers = [line.strip().upper() for line in f if line.strip() and not line.strip().startswith("#")]
+            tickers = []
+            for line in f:
+                # Remove inline comments and strip whitespace
+                part = line.split("#")[0].strip().upper()
+                if part:
+                    tickers.append(part)
             if tickers:
                 return tickers
-    return ["TSLA", "MSFT", "AAPL", "NVDA", "AMZN", "GOOGL", "META", "BP.L", "AZN.L", "VOD.L", "LSEG.L"]
+    # Default fallback
+    if universe_prefix == "summary_uk_etfs":
+        return ["VWRL.L", "VWRP.L", "VUAG.L", "VUSA.L", "IUSA.L", "EQQQ.L", "ISF.L"]
+    else:
+        return ["TSLA", "MSFT", "AAPL", "NVDA", "AMZN", "GOOGL", "META"]
 
 
 # Fallback/Mock Data Generator
-def generate_mock_data():
-    tickers = get_tickers()
+def generate_mock_data(universe_prefix="summary"):
+    tickers = get_tickers(universe_prefix)
     np.random.seed(42)
     dates = pd.date_range(end=datetime.now(), periods=250, freq='B')
     
@@ -299,8 +308,8 @@ def generate_mock_data():
 
 
 # Download universe data from Yahoo Finance
-def download_default_data():
-    tickers = get_tickers()
+def download_default_data(universe_prefix="summary"):
+    tickers = get_tickers(universe_prefix)
     downloaded_any = False
     
     for ticker in tickers:
@@ -319,7 +328,7 @@ def download_default_data():
             
     # If all API calls failed (offline), generate mock data as safety fallback
     if not downloaded_any:
-        generate_mock_data()
+        generate_mock_data(universe_prefix)
 
 
 # Standardized parser for CSV files
@@ -389,24 +398,31 @@ def calculate_macd(prices):
 
 # Fetch & calculate all metrics (Cached)
 @st.cache_data(ttl=600)
-def fetch_and_prepare_all_data(selected_date):
+def fetch_and_prepare_all_data(selected_date, universe_prefix="summary"):
     cohort_list = []
     
     # 1. Search for aggregated summary file or batch files for the selected date
     if selected_date == "local":
-        summary_file = os.path.join("output", "summary_local.csv")
+        summary_file = os.path.join("output", f"{universe_prefix}_local.csv")
         if os.path.exists(summary_file):
             summary_files = [summary_file]
-        elif os.path.exists("batch_summary_local.csv"):
+        elif os.path.exists(f"batch_summary_{universe_prefix}_local.csv"):
+            summary_files = [f"batch_summary_{universe_prefix}_local.csv"]
+        elif universe_prefix == "summary" and os.path.exists("batch_summary_local.csv"):
             summary_files = ["batch_summary_local.csv"]
         else:
             summary_files = []
     else:
-        summary_file = os.path.join("output", f"summary_{selected_date}.csv")
+        summary_file = os.path.join("output", f"{universe_prefix}_{selected_date}.csv")
         if os.path.exists(summary_file):
             summary_files = [summary_file]
         else:
-            summary_files = glob.glob(f"batch_summary_*_{selected_date}.csv")
+            # Handle fallback to batch files if present
+            if universe_prefix == "summary":
+                summary_files = glob.glob(f"batch_summary_*_{selected_date}.csv")
+            else:
+                universe_name = universe_prefix.replace("summary_", "")
+                summary_files = glob.glob(f"batch_summary_{universe_name}_*_{selected_date}.csv")
         
     if summary_files:
         for filepath in summary_files:
@@ -430,7 +446,7 @@ def fetch_and_prepare_all_data(selected_date):
     if not cohort_list:
         local_files = glob.glob("LSE_DLY_*.csv")
         if not local_files:
-            download_default_data()
+            download_default_data(universe_prefix)
             local_files = glob.glob("LSE_DLY_*.csv")
             
         for filepath in local_files:
@@ -466,7 +482,7 @@ def fetch_and_prepare_all_data(selected_date):
             try:
                 os.makedirs("output", exist_ok=True)
                 local_summary = pd.DataFrame(cohort_list)
-                local_summary.to_csv(os.path.join("output", "summary_local.csv"), index=False)
+                local_summary.to_csv(os.path.join("output", f"{universe_prefix}_local.csv"), index=False)
             except Exception:
                 pass
                 
@@ -624,26 +640,42 @@ def create_plotly_chart(df, ticker, mode):
 
 
 # Streamlit Execution Setup
+# ----------------- UNIVERSE SELECTOR SETUP -----------------
+st.sidebar.markdown("<h2 style='margin-bottom:0;'>🌌 TICKER UNIVERSE</h2>", unsafe_allow_html=True)
+selected_universe = st.sidebar.selectbox("Select Ticker Universe:", ["US Stocks", "UK ETFs"], index=0)
+
+universe_prefix = "summary" if selected_universe == "US Stocks" else "summary_uk_etfs"
+universe_name = "summary" if selected_universe == "US Stocks" else "uk_etfs"
+
 # ----------------- DATE SELECTOR SETUP -----------------
 import re
 dates = set()
 
-# Scan output folder for aggregated summaries
-output_summaries = glob.glob(os.path.join("output", "summary_*.csv"))
+# Scan output folder for aggregated summaries of the selected universe
+output_summaries = glob.glob(os.path.join("output", f"{universe_prefix}_*.csv"))
 for f in output_summaries:
-    match = re.search(r"summary_(\d{4}-\d{2}-\d{2})\.csv$", f)
+    match = re.search(rf"{universe_prefix}_(\d{{4}}-\d{{2}}-\d{{2}})\.csv$", f)
     if match:
         dates.add(match.group(1))
 
 # Scan root folder for batch summaries (backward compatibility)
-batch_summaries = glob.glob("batch_summary_*_*.csv")
-for f in batch_summaries:
-    match = re.search(r"batch_summary_\d+_(\d{4}-\d{2}-\d{2})\.csv$", f)
-    if match:
-        dates.add(match.group(1))
+if universe_prefix == "summary":
+    batch_summaries = glob.glob("batch_summary_*_*.csv")
+    for f in batch_summaries:
+        match = re.search(r"batch_summary_\d+_(\d{4}-\d{2}-\d{2})\.csv$", f)
+        if match:
+            dates.add(match.group(1))
+else:
+    batch_summaries = glob.glob(f"batch_summary_{universe_name}_*_*.csv")
+    for f in batch_summaries:
+        match = re.search(rf"batch_summary_{universe_name}_\d+_(\d{{4}}-\d{{2}}-\d{{2}})\.csv$", f)
+        if match:
+            dates.add(match.group(1))
 
 # Also check for local summaries if they exist
-if os.path.exists(os.path.join("output", "summary_local.csv")) or os.path.exists("batch_summary_local.csv"):
+if os.path.exists(os.path.join("output", f"{universe_prefix}_local.csv")):
+    dates.add("local")
+elif universe_prefix == "summary" and os.path.exists("batch_summary_local.csv"):
     dates.add("local")
 
 if dates:
@@ -655,7 +687,7 @@ else:
     st.sidebar.markdown("<h2 style='margin-bottom:0;'>📅 ANALYSIS DATE</h2>", unsafe_allow_html=True)
     st.sidebar.info(f"No summary CSVs found. Using today's date: {selected_date_str}")
 
-all_data, cohort_list = fetch_and_prepare_all_data(selected_date_str)
+all_data, cohort_list = fetch_and_prepare_all_data(selected_date_str, universe_prefix)
 
 # ----------------- SIDEBAR CONFIG -----------------
 st.sidebar.markdown("<h2 style='margin-bottom:0;'>⚙️ PROFILE ENGINE</h2>", unsafe_allow_html=True)

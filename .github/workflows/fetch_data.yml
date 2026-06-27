@@ -58,8 +58,11 @@ jobs:
           fi
           
           if [ "$CHOSEN_BATCH" = "all" ] || [ "$CHOSEN_BATCH" = "${{ matrix.batch }}" ]; then
-            echo "Executing fetch for Batch ${{ matrix.batch }}..."
-            python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10
+            echo "Executing US Stocks fetch for Batch ${{ matrix.batch }}..."
+            python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file tickers.txt
+            
+            echo "Executing UK ETFs fetch for Batch ${{ matrix.batch }}..."
+            python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file uk_etfs.txt
           else
             echo "Skipping Batch ${{ matrix.batch }} as requested (Chosen: $CHOSEN_BATCH)"
             # Create a simple file so the upload step is successful
@@ -100,39 +103,7 @@ jobs:
 
       - name: Combine and Merge Batch Summaries
         run: |
-          python -c "
-          import glob, pandas as pd, re, os
-          csv_files = glob.glob('downloaded-artifacts/**/*.csv', recursive=True)
-          if csv_files:
-              # Extract date from one of the files
-              date_str = 'local'
-              for f in csv_files:
-                  match = re.search(r'batch_summary_\d+_(\d{4}-\d{2}-\d{2})\.csv', f)
-                  if match:
-                      date_str = match.group(1)
-                      break
-              
-              # Read and concat new batch data
-              dfs = [pd.read_csv(f) for f in csv_files]
-              new_df = pd.concat(dfs, ignore_index=True)
-              
-              # Load existing consolidated summary if it exists
-              os.makedirs('output', exist_ok=True)
-              output_file = os.path.join('output', f'summary_{date_str}.csv')
-              if os.path.exists(output_file):
-                  existing_df = pd.read_csv(output_file)
-                  combined = pd.concat([existing_df, new_df], ignore_index=True)
-                  combined = combined.drop_duplicates(subset=['ticker'], keep='last')
-              else:
-                  combined = new_df
-              
-              # Sort by ticker name for clean diffs
-              combined = combined.sort_values(by='ticker').reset_index(drop=True)
-              combined.to_csv(output_file, index=False)
-              print(f'Successfully consolidated and saved to {output_file} with {len(combined)} tickers.')
-          else:
-              print('No CSV batch summaries found to aggregate.')
-          "
+          python consolidate.py --search-dir downloaded-artifacts --output-dir output
           # Clean up temporary downloads directory
           rm -rf downloaded-artifacts
 

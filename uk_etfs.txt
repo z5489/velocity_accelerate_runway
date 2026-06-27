@@ -1,0 +1,28 @@
+# UK ETFs Ticker List (London Stock Exchange)
+# Add LSE tickers with .L suffix for Yahoo Finance compatibility.
+
+# Broad Market / World
+VWRL.L   # Vanguard FTSE All-World UCITS ETF (Dist)
+VWRP.L   # Vanguard FTSE All-World UCITS ETF (Acc)
+HMAD.L   # HSBC MSCI World UCITS ETF (Acc)
+IWDG.L   # iShares Core MSCI World UCITS ETF GBP Hedged (Dist)
+
+# S&P 500 & US Tech
+VUAG.L   # Vanguard S&P 500 UCITS ETF (Acc)
+VUSA.L   # Vanguard S&P 500 UCITS ETF (Dist)
+IUSA.L   # iShares Core S&P 500 UCITS ETF (Dist)
+EQQQ.L   # Invesco EQQQ Nasdaq-100 UCITS ETF (Dist)
+CNX1.L   # iShares Nasdaq 100 UCITS ETF (Acc)
+
+# UK Domestic
+ISF.L    # iShares Core FTSE 100 UCITS ETF (Dist)
+CUKX.L   # Vanguard FTSE 100 UCITS ETF (Dist)
+VMID.L   # Vanguard FTSE 250 UCITS ETF (Dist)
+
+# Regional / Emerging Markets
+VERX.L   # Vanguard FTSE Developed Europe ex-UK UCITS ETF (Dist)
+VFEM.L   # Vanguard FTSE Emerging Markets UCITS ETF (Dist)
+
+# Sector / thematic
+INRG.L   # iShares Global Clean Energy UCITS ETF (Dist)
+VHYL.L   # Vanguard FTSE All-World High Dividend Yield UCITS ETF (Dist)
