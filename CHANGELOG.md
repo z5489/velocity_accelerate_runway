@@ -11,6 +11,7 @@ This document tracks all version commits and updates for the Hologram Quant Trad
 * **Historical Date Selector**: Added a **📅 Analysis Date** sidebar selectbox in [app.py](file:///app.py) to load historical summary states.
 * **On-Demand Deep-Dive**: Refactored the dashboard deep-dive charts to query Yahoo Finance on-the-fly, aligned to the selected date.
 * **Weekend Filters**: Integrated weekend filters to automatically fetch Friday close data if run on Saturdays or Sundays.
+* **Workflow Dependencies Caching**: Added [requirements.txt](file:///requirements.txt) to track package requirements and configured workflow caching via `actions/setup-python` to optimize job execution times.
 
 ---
 
