@@ -59,10 +59,10 @@ jobs:
           
           if [ "$CHOSEN_BATCH" = "all" ] || [ "$CHOSEN_BATCH" = "${{ matrix.batch }}" ]; then
             echo "Executing US Stocks fetch for Batch ${{ matrix.batch }}..."
-            python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file tickers.txt
+            python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file tickers.txt --region US
             
             echo "Executing UK ETFs fetch for Batch ${{ matrix.batch }}..."
-            python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file uk_etfs.txt
+            python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file uk_etfs.txt --region UK
           else
             echo "Skipping Batch ${{ matrix.batch }} as requested (Chosen: $CHOSEN_BATCH)"
             # Create a simple file so the upload step is successful

@@ -246,132 +246,6 @@ hr {
 """, unsafe_allow_html=True)
 
 
-# Ticker string cleaning utility
-def clean_ticker_name(filename):
-    base = os.path.basename(filename)
-    # Remove LSE_DLY_ prefix
-    cleaned = re.sub(r"^LSE_DLY_", "", base, flags=re.IGNORECASE)
-    # Remove trailing extension and indicator like , 1D or , 1D (1) or .csv
-    cleaned = re.sub(r"(?:,\s*\d+[WD])?(?:\s*\(\d+\))?\.csv$", "", cleaned, flags=re.IGNORECASE)
-    return cleaned.strip().upper()
-
-
-# Load tickers list from tickers.txt or uk_etfs.txt with fallback
-def get_tickers(universe_prefix="summary"):
-    tickers_file = "uk_etfs.txt" if universe_prefix == "summary_uk_etfs" else "tickers.txt"
-    if os.path.exists(tickers_file):
-        with open(tickers_file, "r") as f:
-            tickers = []
-            for line in f:
-                # Remove inline comments and strip whitespace
-                part = line.split("#")[0].strip().upper()
-                if part:
-                    tickers.append(part)
-            if tickers:
-                return tickers
-    # Default fallback
-    if universe_prefix == "summary_uk_etfs":
-        return ["VWRL.L", "VWRP.L", "VUAG.L", "VUSA.L", "IUSA.L", "EQQQ.L", "ISF.L"]
-    else:
-        return ["TSLA", "MSFT", "AAPL", "NVDA", "AMZN", "GOOGL", "META"]
-
-
-# Fallback/Mock Data Generator
-def generate_mock_data(universe_prefix="summary"):
-    tickers = get_tickers(universe_prefix)
-    np.random.seed(42)
-    dates = pd.date_range(end=datetime.now(), periods=250, freq='B')
-    
-    for ticker in tickers:
-        if ticker == "TSLA": base_price = 180.0
-        elif ticker == "MSFT": base_price = 420.0
-        elif ticker == "AAPL": base_price = 190.0
-        elif ticker == "NVDA": base_price = 120.0
-        elif ticker == "BP.L": base_price = 460.0
-        elif ticker == "AZN.L": base_price = 12000.0
-        else: base_price = 150.0
-        
-        # Simulate returns with some positive trend
-        returns = np.random.normal(loc=0.0006, scale=0.018, size=250)
-        price_path = base_price * np.exp(np.cumsum(returns))
-        
-        df = pd.DataFrame(index=dates)
-        df['Close'] = price_path
-        df['Open'] = price_path * (1 + np.random.normal(0, 0.004, 250))
-        df['High'] = df[['Open', 'Close']].max(axis=1) * (1 + np.abs(np.random.normal(0, 0.006, 250)))
-        df['Low'] = df[['Open', 'Close']].min(axis=1) * (1 - np.abs(np.random.normal(0, 0.006, 250)))
-        df['Volume'] = np.random.randint(500000, 10000000, 250)
-        df = df.reset_index().rename(columns={'index': 'Date'})
-        
-        filename = f"LSE_DLY_{ticker}.csv"
-        df.to_csv(filename, index=False)
-
-
-# Download universe data from Yahoo Finance
-def download_default_data(universe_prefix="summary"):
-    tickers = get_tickers(universe_prefix)
-    downloaded_any = False
-    
-    for ticker in tickers:
-        try:
-            # Download 2 years to ensure enough data for rolling calculations
-            df = yf.Ticker(ticker).history(period="2y")
-            if not df.empty:
-                df = df.reset_index()
-                if 'Date' in df.columns:
-                    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
-                    filename = f"LSE_DLY_{ticker}.csv"
-                    df.to_csv(filename, index=False)
-                    downloaded_any = True
-        except Exception:
-            pass
-            
-    # If all API calls failed (offline), generate mock data as safety fallback
-    if not downloaded_any:
-        generate_mock_data(universe_prefix)
-
-
-# Standardized parser for CSV files
-def load_ticker_data(filepath):
-    df = pd.read_csv(filepath)
-    df.columns = [col.lower().strip() for col in df.columns]
-    
-    # Identify Date column
-    date_col = None
-    for col in ['date', 'time', 'timestamp', 'datetime']:
-        if col in df.columns:
-            date_col = col
-            break
-    if not date_col:
-        date_col = df.columns[0]
-        
-    df[date_col] = pd.to_datetime(df[date_col])
-    df = df.sort_values(by=date_col).reset_index(drop=True)
-    
-    # Identify Close column
-    close_col = None
-    for col in ['adj close', 'close']:
-        if col in df.columns:
-            close_col = col
-            break
-    if not close_col:
-        close_col = df.columns[4]
-        
-    standard_df = pd.DataFrame()
-    standard_df['Date'] = df[date_col]
-    standard_df['Close'] = pd.to_numeric(df[close_col], errors='coerce')
-    
-    # Handle optional OHLCV columns
-    for col in ['open', 'high', 'low', 'volume']:
-        if col in df.columns:
-            standard_df[col.capitalize()] = pd.to_numeric(df[col], errors='coerce')
-        else:
-            standard_df[col.capitalize()] = standard_df['Close']
-            
-    standard_df = standard_df.dropna(subset=['Date', 'Close']).reset_index(drop=True)
-    return standard_df
-
-
 # Mathematical indicator functions
 def calculate_rsi(prices, period=14):
     delta = prices.diff()
@@ -384,16 +258,6 @@ def calculate_rsi(prices, period=14):
     rs = avg_gain / avg_loss.replace(0, 1e-10)
     rsi = 100 - (100 / (1 + rs))
     return rsi
-
-
-def calculate_macd(prices):
-    ema12 = prices.ewm(span=12, adjust=False).mean()
-    ema26 = prices.ewm(span=26, adjust=False).mean()
-    macd_line = ema12 - ema26
-    signal_line = macd_line.ewm(span=9, adjust=False).mean()
-    macd_hist = macd_line - signal_line
-    hist_delta = macd_hist.diff(1)
-    return macd_line, signal_line, macd_hist, hist_delta
 
 
 # Fetch & calculate all metrics (Cached)
@@ -434,55 +298,15 @@ def fetch_and_prepare_all_data(selected_date, universe_prefix="summary"):
                     for _, row in sdf.iterrows():
                         cohort_list.append({
                             'ticker': str(row['ticker']),
+                            'name': str(row.get('name', row['ticker'])),
+                            'sector': str(row.get('sector', 'N/A')),
+                            'industry': str(row.get('industry', 'N/A')),
                             'close': float(row['close']),
                             'velocity': float(row['velocity']),
                             'acceleration': float(row['acceleration']),
-                            'rsi': float(row['rsi'])
+                            'rsi': float(row['rsi']),
+                            'region': str(row.get('region', 'UK' if universe_prefix == 'summary_uk_etfs' else 'US'))
                         })
-            except Exception:
-                pass
-                
-    # 2. If no summary files are found for that date, fallback to individual CSV parsing (for local dev)
-    if not cohort_list:
-        local_files = glob.glob("LSE_DLY_*.csv")
-        if not local_files:
-            download_default_data(universe_prefix)
-            local_files = glob.glob("LSE_DLY_*.csv")
-            
-        for filepath in local_files:
-            ticker = clean_ticker_name(filepath)
-            try:
-                df = load_ticker_data(filepath)
-                if len(df) < 35:
-                    continue
-                df['RSI'] = calculate_rsi(df['Close'])
-                _, _, _, hist_delta = calculate_macd(df['Close'])
-                latest_idx = df.index[-1]
-                close_price = df.loc[latest_idx, 'Close']
-                v_val = ((close_price - df.loc[df.index[-6], 'Close']) / df.loc[df.index[-6], 'Close']) * 100
-                a_val = hist_delta.iloc[latest_idx]
-                rsi_val = df.loc[latest_idx, 'RSI']
-                
-                if np.isnan(v_val): v_val = 0.0
-                if np.isnan(a_val): a_val = 0.0
-                if np.isnan(rsi_val): rsi_val = 50.0
-                
-                cohort_list.append({
-                    'ticker': ticker,
-                    'close': close_price,
-                    'velocity': v_val,
-                    'acceleration': a_val,
-                    'rsi': rsi_val
-                })
-            except Exception:
-                pass
-                
-        # Save a local summary for subsequent instant loads
-        if cohort_list:
-            try:
-                os.makedirs("output", exist_ok=True)
-                local_summary = pd.DataFrame(cohort_list)
-                local_summary.to_csv(os.path.join("output", f"{universe_prefix}_local.csv"), index=False)
             except Exception:
                 pass
                 
@@ -536,7 +360,11 @@ def compute_scores(cohort_list, mode):
 
         scored_cohort.append({
             'Ticker': ticker,
+            'Name': item.get('name', ticker),
+            'Sector': item.get('sector', 'N/A'),
+            'Industry': item.get('industry', 'N/A'),
             'Total Score': round(total_score, 1),
+            'Region': item.get('region', 'US'),
             'Velocity Score': round(v_score, 1),
             'Acceleration Score': round(a_score, 1),
             'Runway Score': round(r_score, 1),
@@ -785,7 +613,7 @@ leaderboard_df = pd.DataFrame(scored_cohort)
 if not leaderboard_df.empty:
     # Re-order columns for display
     display_cols = [
-        'Ticker', 'Total Score', 'Close Price', 
+        'Ticker', 'Name', 'Region', 'Sector', 'Industry', 'Total Score', 'Close Price', 
         'Velocity Score', 'Acceleration Score', 'Runway Score',
         '5-Day ROC %', 'MACD Hist Delta', 'RSI'
     ]

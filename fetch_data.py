@@ -102,8 +102,21 @@ def compute_latest_metrics(df):
 
 def fetch_single_ticker(ticker):
     try:
+        t = yf.Ticker(ticker)
         # Download 2 years of daily data using Ticker.history for thread safety
-        df = yf.Ticker(ticker).history(period="2y")
+        df = t.history(period="2y")
+        
+        # Try to extract descriptive metadata with fallbacks if offline/api error
+        name = ticker
+        sector = "N/A"
+        industry = "N/A"
+        try:
+            info = t.info
+            name = info.get('longName') or info.get('shortName') or ticker
+            sector = info.get('sector') or info.get('quoteType') or "N/A"
+            industry = info.get('industry') or info.get('quoteType') or "N/A"
+        except Exception:
+            pass
         
         if not df.empty:
             df = df.reset_index()
@@ -126,6 +139,9 @@ def fetch_single_ticker(ticker):
                 metrics = compute_latest_metrics(df)
                 if metrics and len(df) > 0:
                     metrics['ticker'] = ticker
+                    metrics['name'] = name
+                    metrics['sector'] = sector
+                    metrics['industry'] = industry
                     latest_date = df['Date'].iloc[-1].strftime('%Y-%m-%d')
                     return metrics, latest_date, f"Successfully calculated metrics for {ticker} ({len(df)} rows)"
                 else:
@@ -143,6 +159,7 @@ def main():
     parser.add_argument("--total-batches", type=int, default=1, help="Total number of batches the list is split into")
     parser.add_argument("--threads", type=int, default=15, help="Number of concurrent downloader threads")
     parser.add_argument("--ticker-file", type=str, default="tickers.txt", help="Path to text file containing tickers")
+    parser.add_argument("--region", type=str, default="US", help="Region label for the tickers (e.g. US or UK)")
     args = parser.parse_args()
 
     tickers = get_tickers(args.ticker_file)
@@ -189,8 +206,9 @@ def main():
             fetch_date = datetime.date.today().strftime('%Y-%m-%d')
             
         summary_df = pd.DataFrame(summary_results)
-        # Ensure exact column ordering
-        summary_df = summary_df[['ticker', 'close', 'velocity', 'acceleration', 'rsi']]
+        # Ensure exact column ordering with region label and company metadata
+        summary_df['region'] = args.region
+        summary_df = summary_df[['ticker', 'name', 'sector', 'industry', 'close', 'velocity', 'acceleration', 'rsi', 'region']]
         
         # Name file according to the custom ticker file used
         base_name = os.path.splitext(os.path.basename(args.ticker_file))[0]

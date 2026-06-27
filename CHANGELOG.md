@@ -10,6 +10,8 @@ This document tracks all version commits and updates for the Hologram Quant Trad
 * **Output Consolidator**: Created [consolidate.py](file:///consolidate.py) to aggregate parallel batch files grouped by date and universe suffix.
 * **GitHub Actions Multi-Universe Pipeline**: Configured [.github/workflows/fetch_data.yml](file:///.github/workflows/fetch_data.yml) to fetch both universes in parallel and consolidate them separately into `output/summary_{date}.csv` and `output/summary_uk_etfs_{date}.csv`.
 * **Inline Comments Support**: Updated the ticker list parser to strip inline comments so tickers can be annotated in place.
+* **Metadata & Region Tracking**: Integrated `region` (US or UK), `name` (company/fund name), `sector`, and `industry` columns to the daily scraper, consolidator, and dashboard leaderboard table.
+* **Cleaned Up Obsolete Fallbacks**: Deleted individual `LSE_DLY_*.csv` file generation, fallbacks, local download, and mocking logic from [app.py](file:///app.py) to rely purely on the automated daily consolidated summaries.
 
 ---
 

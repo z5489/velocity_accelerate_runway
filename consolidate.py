@@ -64,6 +64,29 @@ def consolidate_summaries(search_dir="downloaded-artifacts", output_dir="output"
         else:
             combined = new_df
             
+        # Populate region column if missing or empty
+        default_region = "UK" if universe == "uk_etfs" else "US"
+        if 'region' not in combined.columns:
+            combined['region'] = default_region
+        else:
+            combined['region'] = combined['region'].fillna(default_region)
+            
+        # Populate name, sector, and industry if missing
+        if 'name' not in combined.columns:
+            combined['name'] = combined['ticker']
+        else:
+            combined['name'] = combined['name'].fillna(combined['ticker'])
+            
+        if 'sector' not in combined.columns:
+            combined['sector'] = "N/A"
+        else:
+            combined['sector'] = combined['sector'].fillna("N/A")
+            
+        if 'industry' not in combined.columns:
+            combined['industry'] = "N/A"
+        else:
+            combined['industry'] = combined['industry'].fillna("N/A")
+            
         # Sort by ticker name for clean diffs
         combined = combined.sort_values(by='ticker').reset_index(drop=True)
         
