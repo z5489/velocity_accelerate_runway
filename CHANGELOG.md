@@ -5,7 +5,6 @@ This document tracks all version commits and updates for the Hologram Quant Trad
 ## Current Changes (To Be Committed)
 
 ### Feature Additions & Multi-Universe Support
-* **UK ETFs Universe**: Configured a new list of highly liquid UK ETF tickers in `uk_etfs.txt`.
 * **Multi-Universe Selector**: Added a "Select Ticker Universe" dropdown to the sidebar in [app.py](file:///app.py) allowing users to switch dynamically between "US Stocks" and "UK ETFs".
 * **Output Consolidator**: Created [consolidate.py](file:///consolidate.py) to aggregate parallel batch files grouped by date and universe suffix.
 * **GitHub Actions Multi-Universe Pipeline**: Configured [.github/workflows/fetch_data.yml](file:///.github/workflows/fetch_data.yml) to fetch both universes in parallel and consolidate them separately into `output/summary_{date}.csv` and `output/summary_uk_etfs_{date}.csv`.
