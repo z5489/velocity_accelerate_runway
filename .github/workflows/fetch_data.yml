@@ -23,6 +23,11 @@ on:
           - '7'
           - '8'
           - '9'
+      target_date:
+        description: 'Target date for data (YYYY-MM-DD). Leave empty for latest business day.'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write # Needed to push updated CSV files back to the repo
@@ -53,13 +58,18 @@ jobs:
       - name: Run Parallel Fetch Script
         run: |
           CHOSEN_BATCH="${{ github.event.inputs.batch_to_run }}"
+          TARGET_DATE="${{ github.event.inputs.target_date }}"
           if [ -z "$CHOSEN_BATCH" ]; then
             CHOSEN_BATCH="all"
           fi
           
           if [ "$CHOSEN_BATCH" = "all" ] || [ "$CHOSEN_BATCH" = "${{ matrix.batch }}" ]; then
             echo "Executing US Stocks fetch for Batch ${{ matrix.batch }}..."
-            python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file tickers.txt --region US
+            if [ -n "$TARGET_DATE" ]; then
+              python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file tickers.txt --region US --date "$TARGET_DATE"
+            else
+              python fetch_data.py --batch-index ${{ matrix.batch }} --total-batches 10 --ticker-file tickers.txt --region US
+            fi
           else
             echo "Skipping Batch ${{ matrix.batch }} as requested (Chosen: $CHOSEN_BATCH)"
             # Create a simple file so the upload step is successful
