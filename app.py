@@ -476,8 +476,8 @@ def create_plotly_chart(df, ticker, mode):
 
 # Streamlit Execution Setup
 # ----------------- UNIVERSE SELECTOR SETUP -----------------
-st.sidebar.markdown("<h2 style='margin-bottom:0;'>🌌 TICKER UNIVERSE</h2>", unsafe_allow_html=True)
-selected_universe = st.sidebar.selectbox("Select Ticker Universe:", ["US Stocks", "UK ETFs"], index=0)
+with st.sidebar.expander("🌌 TICKER UNIVERSE", expanded=False):
+    selected_universe = st.selectbox("Select Ticker Universe:", ["US Stocks", "UK ETFs"], index=0)
 
 universe_prefix = "summary" if selected_universe == "US Stocks" else "summary_uk_etfs"
 universe_name = "summary" if selected_universe == "US Stocks" else "uk_etfs"
