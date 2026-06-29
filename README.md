@@ -6,10 +6,11 @@ Hologram is a high-performance Streamlit dashboard designed to visualize short-t
 
 ## 🚀 Key Features
 
-* **Dynamic Trading Profiles**: Configure calculations instantly between three strategies:
+* **Dynamic Trading Profiles**: Configure calculations instantly between four strategies:
   * **Aggressive Momentum Chaser** (40% Velocity / 40% Acceleration / 20% Runway)
   * **Balanced Swing Trader** (35% Velocity / 35% Acceleration / 30% Runway)
   * **Mean-Reversion Trader** (15% Velocity / 35% Acceleration / 50% Runway)
+  * **Bearish Short** (35% Velocity / 35% Acceleration / 30% Runway) - Inverse momentum model for short setups.
 * **Automated Universe Loading**: Scans the local directory for `LSE_DLY_*.csv` files, automatically cleans ticker strings, and auto-downloads default stock data from Yahoo Finance if none exist.
 * **Continuous Mathematical Scaling**:
   * **Velocity**: Cohort-normalized 5-Day Rate of Change (ROC%).
@@ -63,8 +64,8 @@ Where:
 
 To support thousands of stock tickers dynamically, the workspace features an automated parallel data fetcher pipeline:
 
-* **Parallel Matrix Jobs**: The [.github/workflows/fetch_data.yml](file:///.github/workflows/fetch_data.yml) workflow runs parallel jobs across 10 matrix runners to download and compute technical metrics concurrently.
-* **Thread-Safe Fetching**: The [fetch_data.py](file:///fetch_data.py) script retrieves price history thread-safely via `yf.Ticker().history()` and extracts latest indicators (Close, Velocity ROC%, Acceleration MACD Hist Delta, RSI) without storing heavy raw history on disk.
+* **Parallel Matrix Jobs**: The [.github/workflows/fetch_data.yml](file:///.github/workflows/fetch_data.yml) workflow runs parallel jobs across 10 matrix runners to download and compute technical metrics concurrently. It now supports a `target_date` input for manual triggers.
+* **Thread-Safe Fetching**: The [fetch_data.py](file:///fetch_data.py) script retrieves price history thread-safely via `yf.Ticker().history()`. It includes smart date-handling to automatically fetch the latest business day if no specific date is provided.
 * **Historical Date Selector**: Pre-calculated daily batch summaries (`batch_summary_<batch_index>_<date>.csv`) are saved to the repo. A **Date Selector** in the dashboard sidebar lets users select any date to navigate back and browse past ranks.
 
 ---

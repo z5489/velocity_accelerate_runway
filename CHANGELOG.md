@@ -4,6 +4,12 @@ This document tracks all version commits and updates for the Hologram Quant Trad
 
 ## Current Changes (To Be Committed)
 
+### Bearish Short Signal Implementation
+* **Bearish Scoring Logic**: Added a "Bearish Short" profile to `app.py` that rewards negative velocity, decreasing MACD histograms, and overbought RSI levels (peak 70) to identify high-conviction short setups.
+* **Dashboard Integration**: Added "Bearish Short" as a selectable strategy in the sidebar with a dedicated description and weight configuration.
+* **Flexible Date Fetching**: Updated `fetch_data.py` to support an optional `--date` argument. If omitted, the script now automatically calculates the most recent business day (handling weekends) to ensure the latest available market data is used.
+* **GitHub Workflow Update**: Added a `target_date` input to the `workflow_dispatch` trigger in `.github/workflows/fetch_data.yml`, allowing users to manually trigger a fetch for a specific historical date.
+
 ### Feature Additions & Multi-Universe Support
 * **Multi-Universe Selector**: Added a "Select Ticker Universe" dropdown to the sidebar in [app.py](file:///app.py) allowing users to switch dynamically between "US Stocks" and "UK ETFs".
 * **Output Consolidator**: Created [consolidate.py](file:///consolidate.py) to aggregate parallel batch files grouped by date and universe suffix.
