@@ -100,7 +100,7 @@ def compute_latest_metrics(df):
             print(f"Failed to print debug info: {str(inner_e)}")
         return None
 
-def fetch_single_ticker(ticker):
+def fetch_single_ticker(ticker, target_date=None):
     try:
         t = yf.Ticker(ticker)
         # Download 2 years of daily data using Ticker.history for thread safety
@@ -124,16 +124,23 @@ def fetch_single_ticker(ticker):
             if 'Date' in df.columns:
                 df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
                 
-                # If run on weekend (Saturday=5, Sunday=6), filter data to end on Friday
+                # Date Filtering Logic
                 import datetime
-                today = datetime.date.today()
-                weekday = today.weekday()
-                if weekday == 5: # Saturday
-                    friday = today - datetime.timedelta(days=1)
-                    df = df[df['Date'].dt.date <= friday]
-                elif weekday == 6: # Sunday
-                    friday = today - datetime.timedelta(days=2)
-                    df = df[df['Date'].dt.date <= friday]
+                if target_date:
+                    # Use the provided target date
+                    filter_date = pd.to_datetime(target_date).date()
+                else:
+                    # Default: Today if weekday, else last business day
+                    today = datetime.date.today()
+                    weekday = today.weekday()
+                    if weekday == 5: # Saturday
+                        filter_date = today - datetime.timedelta(days=1)
+                    elif weekday == 6: # Sunday
+                        filter_date = today - datetime.timedelta(days=2)
+                    else:
+                        filter_date = today
+                
+                df = df[df['Date'].dt.date <= filter_date]
                 
                 # Compute indicators and return summary metrics
                 metrics = compute_latest_metrics(df)
@@ -160,6 +167,7 @@ def main():
     parser.add_argument("--threads", type=int, default=15, help="Number of concurrent downloader threads")
     parser.add_argument("--ticker-file", type=str, default="tickers.txt", help="Path to text file containing tickers")
     parser.add_argument("--region", type=str, default="US", help="Region label for the tickers (e.g. US or UK)")
+    parser.add_argument("--date", type=str, default=None, help="Target date for data (YYYY-MM-DD). If omitted, uses latest business day.")
     args = parser.parse_args()
 
     tickers = get_tickers(args.ticker_file)
@@ -182,7 +190,7 @@ def main():
     
     # Run downloads in parallel using ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=args.threads) as executor:
-        future_to_ticker = {executor.submit(fetch_single_ticker, ticker): ticker for ticker in batch_tickers}
+        future_to_ticker = {executor.submit(fetch_single_ticker, ticker, args.date): ticker for ticker in batch_tickers}
         
         for future in as_completed(future_to_ticker):
             ticker = future_to_ticker[future]
