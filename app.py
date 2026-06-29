@@ -326,34 +326,41 @@ def compute_scores(cohort_list, mode):
         a_raw = item['acceleration']
         rsi_raw = item['rsi']
 
-        # Velocity Score — fixed absolute threshold:
-        # Any 5-day ROC >= 5% is a perfect 100; scales linearly below that.
-        v_score = min(100.0, max(0.0, (v_raw / 5.0) * 100.0))
-
-        # Acceleration Score — fixed absolute threshold:
-        # Any positive MACD hist delta (momentum increasing) = 100; negative = 30.
-        a_score = 100.0 if a_raw > 0 else 30.0
-
-        # Runway Scores (Continuous functions based on active profile)
-        if mode == "Aggressive Momentum Chaser":
-            if rsi_raw <= 80:
-                r_score = 100.0
-            else:
-                r_score = max(0.0, 100.0 * (100.0 - rsi_raw) / 20.0)
-            w_v, w_a, w_r = 0.40, 0.40, 0.20
-
-        elif mode == "Balanced Swing Trader":
-            # Gaussian peak at RSI 60
-            r_score = 100.0 * np.exp(-((rsi_raw - 60.0) ** 2) / (2.0 * (15.0 ** 2)))
+        # Velocity Score
+        if mode == "Bearish Short":
+            # Bearish Velocity: Reward negative ROC (price dropping)
+            v_score = min(100.0, max(0.0, (-v_raw / 5.0) * 100.0))
+            # Bearish Acceleration: Reward decreasing MACD Histogram
+            a_score = 100.0 if a_raw < 0 else 30.0
+            # Bearish Runway: Peak at RSI 70 (overbought/reversal zone)
+            r_score = 100.0 * np.exp(-((rsi_raw - 70.0) ** 2) / (2.0 * (15.0 ** 2)))
             w_v, w_a, w_r = 0.35, 0.35, 0.30
+        else:
+            # Long Velocity: Any 5-day ROC >= 5% is a perfect 100; scales linearly below that.
+            v_score = min(100.0, max(0.0, (v_raw / 5.0) * 100.0))
+            # Long Acceleration: Any positive MACD hist delta (momentum increasing) = 100; negative = 30.
+            a_score = 100.0 if a_raw > 0 else 30.0
 
-        else:  # Mean-Reversion Trader
-            # Higher score for lower RSI
-            if rsi_raw <= 30:
-                r_score = 100.0
-            else:
-                r_score = max(0.0, 100.0 * (100.0 - rsi_raw) / 70.0)
-            w_v, w_a, w_r = 0.15, 0.35, 0.50
+            # Runway Scores (Continuous functions based on active profile)
+            if mode == "Aggressive Momentum Chaser":
+                if rsi_raw <= 80:
+                    r_score = 100.0
+                else:
+                    r_score = max(0.0, 100.0 * (100.0 - rsi_raw) / 20.0)
+                w_v, w_a, w_r = 0.40, 0.40, 0.20
+
+            elif mode == "Balanced Swing Trader":
+                # Gaussian peak at RSI 60
+                r_score = 100.0 * np.exp(-((rsi_raw - 60.0) ** 2) / (2.0 * (15.0 ** 2)))
+                w_v, w_a, w_r = 0.35, 0.35, 0.30
+
+            else:  # Mean-Reversion Trader
+                # Higher score for lower RSI
+                if rsi_raw <= 30:
+                    r_score = 100.0
+                else:
+                    r_score = max(0.0, 100.0 * (100.0 - rsi_raw) / 70.0)
+                w_v, w_a, w_r = 0.15, 0.35, 0.50
 
         # Total probability score calculation
         total_score = w_v * v_score + w_a * a_score + w_r * r_score
@@ -524,7 +531,8 @@ st.sidebar.write("Configure the trading system strategy weights.")
 mode_options = [
     "Aggressive Momentum Chaser",
     "Balanced Swing Trader",
-    "Mean-Reversion Trader"
+    "Mean-Reversion Trader",
+    "Bearish Short"
 ]
 
 active_mode = st.sidebar.radio(
@@ -547,6 +555,9 @@ if active_mode == "Aggressive Momentum Chaser":
 elif active_mode == "Balanced Swing Trader":
     w_v, w_a, w_r = 35, 35, 30
     mode_desc = "Balances active medium-term trends with remaining room to run. Scores peaked near 60 RSI to avoid early entries or extreme overbought states."
+elif active_mode == "Bearish Short":
+    w_v, w_a, w_r = 35, 35, 30
+    mode_desc = "Inverse momentum model. Rewards negative velocity, decreasing MACD histograms, and overbought RSI levels (peak 70) to identify high-conviction short setups."
 else:
     w_v, w_a, w_r = 15, 35, 50
     mode_desc = "Mean-reversion model searching for oversold stock floors (low RSI) that are actively accelerating upwards (MACD delta reversal)."
