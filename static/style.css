@@ -368,6 +368,8 @@ select option {
 }
 
 .table-container {
+    max-height: 450px;
+    overflow-y: auto;
     overflow-x: auto;
     background: rgba(17, 24, 39, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -381,6 +383,10 @@ table {
 }
 
 thead th {
+    position: sticky;
+    top: 0;
+    background-color: #0e1525;
+    z-index: 10;
     padding: 0.75rem;
     text-align: left;
     font-size: 0.8rem;
