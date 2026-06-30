@@ -284,7 +284,8 @@ function renderChart(chartData) {
         xaxis: {
             gridcolor: 'rgba(255,255,255,0.05)',
             showline: true,
-            linecolor: 'rgba(255,255,255,0.1)'
+            linecolor: 'rgba(255,255,255,0.1)',
+            rangeslider: { visible: false }
         },
         yaxis: {
             gridcolor: 'rgba(255,255,255,0.05)',
@@ -308,8 +309,7 @@ function renderChart(chartData) {
         xaxis: {
             gridcolor: 'rgba(255,255,255,0.05)',
             showline: true,
-            linecolor: 'rgba(255,255,255,0.1)',
-            matches: 'x'
+            linecolor: 'rgba(255,255,255,0.1)'
         },
         yaxis: {
             gridcolor: 'rgba(255,255,255,0.05)',
