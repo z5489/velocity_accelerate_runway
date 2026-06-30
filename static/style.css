@@ -66,6 +66,11 @@ body {
     border-color: rgba(56, 189, 248, 0.5);
 }
 
+select option {
+    background-color: #0b0f19;
+    color: #ffffff;
+}
+
 .mode-options {
     display: flex;
     flex-direction: column;
@@ -343,11 +348,11 @@ body {
 }
 
 #candlestickChart {
-    height: 450px;
+    height: 480px;
 }
 
 #rsiChart {
-    height: 250px;
+    height: 180px;
 }
 
 /* Table Section */
