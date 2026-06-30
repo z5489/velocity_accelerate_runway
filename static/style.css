@@ -332,14 +332,22 @@ body {
 .chart-container {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .chart-container > div {
     background: rgba(17, 24, 39, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
-    padding: 1rem;
+    padding: 1.5rem;
+}
+
+#candlestickChart {
+    height: 450px;
+}
+
+#rsiChart {
+    height: 250px;
 }
 
 /* Table Section */

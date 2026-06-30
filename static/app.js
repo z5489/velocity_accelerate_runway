@@ -271,7 +271,7 @@ function renderChart(chartData) {
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(17, 24, 39, 0.4)',
         font: { color: '#ffffff' },
-        margin: { l: 10, r: 10, t: 10, b: 10 },
+        margin: { l: 55, r: 20, t: 35, b: 40 },
         showlegend: true,
         legend: {
             orientation: 'h',
@@ -303,7 +303,7 @@ function renderChart(chartData) {
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(17, 24, 39, 0.4)',
         font: { color: '#ffffff' },
-        margin: { l: 10, r: 10, t: 10, b: 10 },
+        margin: { l: 55, r: 20, t: 15, b: 40 },
         showlegend: false,
         xaxis: {
             gridcolor: 'rgba(255,255,255,0.05)',
