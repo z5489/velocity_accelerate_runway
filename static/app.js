@@ -158,6 +158,11 @@ function updateUI(data, topData) {
     // Load chart for top ticker if available
     if (topData.ticker) {
         loadChart(topData.ticker);
+        // Highlight row
+        const row = document.querySelector(`#cohortTableBody tr[data-ticker="${topData.ticker}"]`);
+        if (row) row.classList.add('selected-row');
+        // Set dropdown
+        tickerChartSelect.value = topData.ticker;
     }
 }
 
@@ -180,7 +185,7 @@ function updateTable(data) {
     }
     
     cohortTableBody.innerHTML = data.map((item, idx) => `
-        <tr>
+        <tr data-ticker="${item.Ticker}">
             <td>${idx + 1}</td>
             <td><strong>${item.Ticker}</strong></td>
             <td>${item.Name}</td>
@@ -352,8 +357,31 @@ modeRadios.forEach(radio => {
 });
 
 tickerChartSelect.addEventListener('change', (e) => {
-    if (e.target.value) {
-        loadChart(e.target.value);
+    const ticker = e.target.value;
+    if (ticker) {
+        loadChart(ticker);
+        // Sync table selection highlight
+        document.querySelectorAll('#cohortTableBody tr').forEach(r => r.classList.remove('selected-row'));
+        const row = document.querySelector(`#cohortTableBody tr[data-ticker="${ticker}"]`);
+        if (row) row.classList.add('selected-row');
+    }
+});
+
+cohortTableBody.addEventListener('click', (e) => {
+    const row = e.target.closest('tr');
+    if (!row) return;
+    
+    const ticker = row.dataset.ticker;
+    if (ticker) {
+        // Highlight selected row
+        document.querySelectorAll('#cohortTableBody tr').forEach(r => r.classList.remove('selected-row'));
+        row.classList.add('selected-row');
+        
+        // Sync dropdown
+        tickerChartSelect.value = ticker;
+        
+        // Load chart
+        loadChart(ticker);
     }
 });
 

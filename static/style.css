@@ -398,9 +398,16 @@ tbody td {
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     white-space: nowrap;
 }
+tbody tr {
+    cursor: pointer;
+}
 
 tbody tr:hover {
     background: rgba(56, 189, 248, 0.05);
+}
+
+tbody tr.selected-row {
+    background-color: rgba(56, 189, 248, 0.15) !important;
 }
 
 .loading-cell {
