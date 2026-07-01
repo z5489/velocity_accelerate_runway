@@ -11,48 +11,60 @@
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="sidebar-section">
-            <h3>🌌 TICKER UNIVERSE</h3>
-            <select id="universeSelect">
-                <option value="US Stocks">US Stocks</option>
-                <option value="UK ETFs">UK ETFs</option>
-            </select>
-        </div>
-
-        <div class="sidebar-section">
-            <h3>📅 ANALYSIS DATE</h3>
-            <select id="dateSelect">
-                <option value="">Loading...</option>
-            </select>
-        </div>
-
-        <div class="sidebar-section">
-            <h3>⚙️ PROFILE ENGINE</h3>
-            <p class="sidebar-desc">Configure the trading system strategy weights.</p>
-            <div class="mode-options">
-                <label class="mode-option">
-                    <input type="radio" name="mode" value="Aggressive Momentum Chaser">
-                    <span>🚀 Aggressive Momentum Chaser</span>
-                </label>
-                <label class="mode-option">
-                    <input type="radio" name="mode" value="Balanced Swing Trader" checked>
-                    <span>⚖️ Balanced Swing Trader</span>
-                </label>
-                <label class="mode-option">
-                    <input type="radio" name="mode" value="Mean-Reversion Trader">
-                    <span>🔄 Mean-Reversion Trader</span>
-                </label>
-                <label class="mode-option">
-                    <input type="radio" name="mode" value="Bearish Short">
-                    <span>📉 Bearish Short</span>
-                </label>
+        <!-- Universe Selector Collapsible -->
+        <details class="sidebar-section">
+            <summary>🌌 TICKER UNIVERSE</summary>
+            <div class="sidebar-content">
+                <select id="universeSelect">
+                    <option value="US Stocks">US Stocks</option>
+                    <option value="UK ETFs">UK ETFs</option>
+                </select>
             </div>
-        </div>
+        </details>
 
-        <div class="sidebar-section">
-            <h3>📊 Universe Status</h3>
-            <p id="tickerCount" style="color: white;">Active Tickers Loaded: <strong>0</strong></p>
-        </div>
+        <!-- Date Selector Collapsible -->
+        <details class="sidebar-section">
+            <summary>📅 ANALYSIS DATE</summary>
+            <div class="sidebar-content">
+                <select id="dateSelect">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+        </details>
+
+        <!-- Profile Selector Collapsible -->
+        <details class="sidebar-section">
+            <summary>⚙️ PROFILE ENGINE</summary>
+            <div class="sidebar-content">
+                <p class="sidebar-desc">Configure the trading system strategy weights.</p>
+                <div class="mode-options">
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="Aggressive Momentum Chaser">
+                        <span>🚀 Aggressive Momentum Chaser</span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="Balanced Swing Trader" checked>
+                        <span>⚖️ Balanced Swing Trader</span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="Mean-Reversion Trader">
+                        <span>🔄 Mean-Reversion Trader</span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="Bearish Short">
+                        <span>📉 Bearish Short</span>
+                    </label>
+                </div>
+            </div>
+        </details>
+
+        <!-- Universe Status Collapsible -->
+        <details class="sidebar-section" open>
+            <summary>📊 Universe Status</summary>
+            <div class="sidebar-content">
+                <p id="tickerCount" style="color: white; margin-top: 0.5rem;">Active Tickers Loaded: <strong>0</strong></p>
+            </div>
+        </details>
     </div>
 
     <!-- Main Content -->
@@ -77,13 +89,6 @@
             </div>
         </div>
 
-        <!-- Top Setup Banner -->
-        <div id="topBanner" class="top-setup-banner neutral">
-            <div class="banner-badge neutral" id="bannerBadge">LOADING</div>
-            <h2 id="bannerTitle">Loading signals...</h2>
-            <p id="bannerDesc">Fetching cohort data</p>
-        </div>
-
         <!-- Metric Cards -->
         <div class="metric-grid">
             <div class="custom-metric-card">
@@ -95,11 +100,11 @@
                 </div>
             </div>
             <div class="custom-metric-card">
-                <div class="metric-header">Total Signals</div>
+                <div class="metric-header">Score ≥ 90 / Total</div>
                 <div class="metric-val" id="totalSignals">--</div>
                 <div class="metric-sub">
-                    <span class="metric-badge">COHORT</span>
-                    <span>Active tickers</span>
+                    <span class="metric-badge">CRITERIA</span>
+                    <span>Meet 90+ Score</span>
                 </div>
             </div>
             <div class="custom-metric-card">
@@ -145,9 +150,6 @@
         <div class="charts-section">
             <div class="chart-header">
                 <h2>📈 Technical Analysis</h2>
-                <select id="tickerChartSelect">
-                    <option value="">Select a ticker...</option>
-                </select>
             </div>
             <div id="chartContainer" class="chart-container">
                 <div id="candlestickChart"></div>

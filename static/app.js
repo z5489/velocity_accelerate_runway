@@ -37,11 +37,6 @@ const topScoreEl = document.getElementById('topScore');
 const topNameEl = document.getElementById('topName');
 const totalSignalsEl = document.getElementById('totalSignals');
 const avgScoreEl = document.getElementById('avgScore');
-const topBanner = document.getElementById('topBanner');
-const bannerBadge = document.getElementById('bannerBadge');
-const bannerTitle = document.getElementById('bannerTitle');
-const bannerDesc = document.getElementById('bannerDesc');
-const tickerChartSelect = document.getElementById('tickerChartSelect');
 const cohortTableBody = document.getElementById('cohortTableBody');
 
 // Fetch cohort data
@@ -124,33 +119,20 @@ function updateUI(data, topData) {
         topSignalEl.textContent = topData.ticker || '--';
         topScoreEl.textContent = topData.score ? topData.score.toFixed(1) : '--';
         topNameEl.textContent = topData.name || '';
-        totalSignalsEl.textContent = data.length;
+        
+        // Calculate criteria: tickers with score >= 90
+        const count90Plus = data.filter(d => d['Total Score'] >= 90).length;
+        totalSignalsEl.textContent = `${count90Plus} / ${data.length}`;
         
         const avg = data.reduce((sum, d) => sum + d['Total Score'], 0) / data.length;
         avgScoreEl.textContent = avg.toFixed(1);
-        
-        // Update banner
-        topBanner.className = 'top-setup-banner success';
-        bannerBadge.className = 'banner-badge success';
-        bannerBadge.textContent = 'SIGNAL ACTIVE';
-        bannerTitle.textContent = `Top Signal: ${topData.ticker}`;
-        bannerDesc.textContent = `${topData.name} — Score: ${topData.score.toFixed(1)} | ${data.length} signals in cohort`;
     } else {
         topSignalEl.textContent = '--';
         topScoreEl.textContent = '--';
         topNameEl.textContent = 'No data';
-        totalSignalsEl.textContent = '0';
+        totalSignalsEl.textContent = '0 / 0';
         avgScoreEl.textContent = '--';
-        
-        topBanner.className = 'top-setup-banner neutral';
-        bannerBadge.className = 'banner-badge neutral';
-        bannerBadge.textContent = 'NO SIGNALS';
-        bannerTitle.textContent = 'No data available';
-        bannerDesc.textContent = 'Select a different date or universe';
     }
-    
-    // Update ticker chart select
-    updateTickerSelect(data);
     
     // Update table
     updateTable(data);
@@ -161,20 +143,7 @@ function updateUI(data, topData) {
         // Highlight row
         const row = document.querySelector(`#cohortTableBody tr[data-ticker="${topData.ticker}"]`);
         if (row) row.classList.add('selected-row');
-        // Set dropdown
-        tickerChartSelect.value = topData.ticker;
     }
-}
-
-// Update ticker dropdown for chart
-function updateTickerSelect(data) {
-    tickerChartSelect.innerHTML = '<option value="">Select a ticker...</option>';
-    data.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.Ticker;
-        opt.textContent = `${item.Ticker} (${item.Name})`;
-        tickerChartSelect.appendChild(opt);
-    });
 }
 
 // Update table
@@ -184,23 +153,28 @@ function updateTable(data) {
         return;
     }
     
-    cohortTableBody.innerHTML = data.map((item, idx) => `
-        <tr data-ticker="${item.Ticker}">
-            <td>${idx + 1}</td>
-            <td><strong>${item.Ticker}</strong></td>
-            <td>${item.Name}</td>
-            <td>${item.Sector}</td>
-            <td>${item.Industry}</td>
-            <td><strong style="color: #38bdf8;">${item['Total Score']}</strong></td>
-            <td>${item['Velocity Score']}</td>
-            <td>${item['Acceleration Score']}</td>
-            <td>${item['Runway Score']}</td>
-            <td>$${item['Close Price']}</td>
-            <td>${item['5-Day ROC %']}</td>
-            <td>${item['MACD Hist Delta']}</td>
-            <td>${item['RSI']}</td>
-        </tr>
-    `).join('');
+    cohortTableBody.innerHTML = data.map((item, idx) => {
+        const isHighScore = item['Total Score'] >= 90;
+        const rowClass = isHighScore ? 'high-score-row' : '';
+        
+        return `
+            <tr data-ticker="${item.Ticker}" class="${rowClass}">
+                <td>${idx + 1}</td>
+                <td><strong>${item.Ticker}</strong></td>
+                <td>${item.Name}</td>
+                <td>${item.Sector}</td>
+                <td>${item.Industry}</td>
+                <td><strong style="color: #38bdf8;">${item['Total Score']}</strong></td>
+                <td>${item['Velocity Score']}</td>
+                <td>${item['Acceleration Score']}</td>
+                <td>${item['Runway Score']}</td>
+                <td>$${item['Close Price']}</td>
+                <td>${item['5-Day ROC %']}</td>
+                <td>${item['MACD Hist Delta']}</td>
+                <td>${item['RSI']}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // Load chart for a ticker
@@ -356,17 +330,6 @@ modeRadios.forEach(radio => {
     radio.addEventListener('change', fetchCohort);
 });
 
-tickerChartSelect.addEventListener('change', (e) => {
-    const ticker = e.target.value;
-    if (ticker) {
-        loadChart(ticker);
-        // Sync table selection highlight
-        document.querySelectorAll('#cohortTableBody tr').forEach(r => r.classList.remove('selected-row'));
-        const row = document.querySelector(`#cohortTableBody tr[data-ticker="${ticker}"]`);
-        if (row) row.classList.add('selected-row');
-    }
-});
-
 cohortTableBody.addEventListener('click', (e) => {
     const row = e.target.closest('tr');
     if (!row) return;
@@ -376,9 +339,6 @@ cohortTableBody.addEventListener('click', (e) => {
         // Highlight selected row
         document.querySelectorAll('#cohortTableBody tr').forEach(r => r.classList.remove('selected-row'));
         row.classList.add('selected-row');
-        
-        // Sync dropdown
-        tickerChartSelect.value = ticker;
         
         // Load chart
         loadChart(ticker);
