@@ -1,6 +1,7 @@
 // State
 let cohortData = [];
 let availableDates = [];
+let activeDistributionToggle = 'sector'; // 'sector' or 'industry'
 
 // Mode configuration
 const modeConfig = {
@@ -38,6 +39,8 @@ const topNameEl = document.getElementById('topName');
 const totalSignalsEl = document.getElementById('totalSignals');
 const avgScoreEl = document.getElementById('avgScore');
 const cohortTableBody = document.getElementById('cohortTableBody');
+const toggleSectorBtn = document.getElementById('toggleSector');
+const toggleIndustryBtn = document.getElementById('toggleIndustry');
 
 // Fetch cohort data
 async function fetchCohort() {
@@ -133,6 +136,9 @@ function updateUI(data, topData) {
         totalSignalsEl.textContent = '0 / 0';
         avgScoreEl.textContent = '--';
     }
+    
+    // Update distribution chart
+    renderDistributionChart();
     
     // Update table
     updateTable(data);
@@ -319,6 +325,61 @@ function renderChart(chartData) {
     Plotly.newPlot('rsiChart', [rsiTrace], rsiLayout, config);
 }
 
+// Render Pie Chart of Sector/Industry distribution for Tickers >= 90
+function renderDistributionChart() {
+    const container = document.getElementById('distributionChartContainer');
+    const highScoringTickers = cohortData.filter(d => d['Total Score'] >= 90);
+    
+    if (highScoringTickers.length === 0) {
+        container.innerHTML = '<div class="no-data-message">No active signals with Score ≥ 90 to display distribution</div>';
+        return;
+    }
+    
+    // Clear and restore distributionChart element
+    container.innerHTML = '<div id="distributionChart"></div>';
+    
+    // Aggregate by active toggle
+    const aggregates = {};
+    highScoringTickers.forEach(item => {
+        const key = activeDistributionToggle === 'sector' ? item.Sector : item.Industry;
+        aggregates[key] = (aggregates[key] || 0) + 1;
+    });
+    
+    const labels = Object.keys(aggregates);
+    const values = Object.values(aggregates);
+    
+    const trace = {
+        labels: labels,
+        values: values,
+        type: 'pie',
+        hole: 0.4, // modern donut style
+        textinfo: 'percent',
+        hoverinfo: 'label+value+percent',
+        textposition: 'inside',
+        marker: {
+            colors: ['#0ea5e9', '#10b981', '#a855f7', '#f97316', '#ef4444', '#eab308', '#6366f1', '#ec4899', '#14b8a6']
+        }
+    };
+    
+    const layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#ffffff', family: 'Outfit, sans-serif' },
+        margin: { l: 20, r: 20, t: 20, b: 20 },
+        showlegend: true,
+        legend: {
+            font: { color: '#ffffff', size: 11 },
+            orientation: 'v',
+            x: 1.05,
+            y: 0.5,
+            yanchor: 'middle'
+        }
+    };
+    
+    const config = { responsive: true, displayModeBar: false };
+    Plotly.newPlot('distributionChart', [trace], layout, config);
+}
+
 // Event listeners
 universeSelect.addEventListener('change', () => {
     fetchDates().then(fetchCohort);
@@ -342,6 +403,25 @@ cohortTableBody.addEventListener('click', (e) => {
         
         // Load chart
         loadChart(ticker);
+    }
+});
+
+// Toggle sector/industry pie chart
+toggleSectorBtn.addEventListener('click', () => {
+    if (activeDistributionToggle !== 'sector') {
+        activeDistributionToggle = 'sector';
+        toggleSectorBtn.classList.add('active');
+        toggleIndustryBtn.classList.remove('active');
+        renderDistributionChart();
+    }
+});
+
+toggleIndustryBtn.addEventListener('click', () => {
+    if (activeDistributionToggle !== 'industry') {
+        activeDistributionToggle = 'industry';
+        toggleIndustryBtn.classList.add('active');
+        toggleSectorBtn.classList.remove('active');
+        renderDistributionChart();
     }
 });
 

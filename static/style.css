@@ -505,3 +505,76 @@ tbody tr.high-score-row.selected-row {
         flex-direction: column;
     }
 }
+
+/* Distribution Pie Chart Section */
+.distribution-section {
+    background: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+}
+
+.distribution-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.distribution-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.toggle-group {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 2px;
+}
+
+.toggle-btn {
+    padding: 0.4rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #9ca3af;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+    color: #ffffff;
+}
+
+.toggle-btn.active {
+    background: #38bdf8;
+    color: #0b0f19;
+}
+
+.distribution-chart-container {
+    height: 250px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#distributionChart {
+    width: 100%;
+    height: 100%;
+}
+
+.no-data-message {
+    color: #9ca3af;
+    font-size: 0.95rem;
+    font-style: italic;
+}
