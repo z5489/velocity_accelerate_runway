@@ -24,10 +24,8 @@ const modeConfig = {
 };
 
 // DOM Elements
-const universeSelect = document.getElementById('universeSelect');
 const dateSelect = document.getElementById('dateSelect');
 const modeRadios = document.querySelectorAll('input[name="mode"]');
-const tickerCount = document.getElementById('tickerCount');
 const activeModeEl = document.getElementById('activeMode');
 const wVelEl = document.getElementById('wVel');
 const wAccEl = document.getElementById('wAcc');
@@ -41,7 +39,7 @@ const toggleIndustryBtn = document.getElementById('toggleIndustry');
 
 // Fetch cohort data
 async function fetchCohort() {
-    const universe = universeSelect.value;
+    const universe = 'US Stocks';
     const date = dateSelect.value;
     const mode = getSelectedMode();
     
@@ -65,7 +63,7 @@ async function fetchCohort() {
 
 // Fetch available dates
 async function fetchDates() {
-    const universe = universeSelect.value;
+    const universe = 'US Stocks';
     const params = new URLSearchParams({ universe });
     
     try {
@@ -102,9 +100,6 @@ function getSelectedMode() {
 // Update UI with new data
 function updateUI(data, topData) {
     cohortData = data;
-    
-    // Update ticker count
-    tickerCount.innerHTML = `Active Tickers Loaded: <strong>${data.length}</strong>`;
     
     // Update mode display
     const config = modeConfig[getSelectedMode()];
@@ -378,10 +373,6 @@ function renderDistributionChart() {
 }
 
 // Event listeners
-universeSelect.addEventListener('change', () => {
-    fetchDates().then(fetchCohort);
-});
-
 dateSelect.addEventListener('change', fetchCohort);
 
 modeRadios.forEach(radio => {
