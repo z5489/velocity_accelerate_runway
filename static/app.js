@@ -328,10 +328,17 @@ function renderChart(chartData) {
 // Render Pie Chart of Sector/Industry distribution for Tickers >= 90
 function renderDistributionChart() {
     const container = document.getElementById('distributionChartContainer');
-    const highScoringTickers = cohortData.filter(d => d['Total Score'] >= 90);
+    
+    // Exclude ETFs from distribution chart
+    const highScoringTickers = cohortData.filter(d => {
+        if (d['Total Score'] < 90) return false;
+        const sector = (d.Sector || '').trim().toUpperCase();
+        const industry = (d.Industry || '').trim().toUpperCase();
+        return sector !== 'ETF' && industry !== 'ETF';
+    });
     
     if (highScoringTickers.length === 0) {
-        container.innerHTML = '<div class="no-data-message">No active signals with Score ≥ 90 to display distribution</div>';
+        container.innerHTML = '<div class="no-data-message">No active signals with Score ≥ 90 to display distribution (excluding ETFs)</div>';
         return;
     }
     
