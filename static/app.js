@@ -33,9 +33,6 @@ const wVelEl = document.getElementById('wVel');
 const wAccEl = document.getElementById('wAcc');
 const wRunEl = document.getElementById('wRun');
 const modeDescEl = document.getElementById('modeDesc');
-const topSignalEl = document.getElementById('topSignal');
-const topScoreEl = document.getElementById('topScore');
-const topNameEl = document.getElementById('topName');
 const totalSignalsEl = document.getElementById('totalSignals');
 const avgScoreEl = document.getElementById('avgScore');
 const cohortTableBody = document.getElementById('cohortTableBody');
@@ -119,10 +116,6 @@ function updateUI(data, topData) {
     
     // Update metric cards
     if (data.length > 0) {
-        topSignalEl.textContent = topData.ticker || '--';
-        topScoreEl.textContent = topData.score ? topData.score.toFixed(1) : '--';
-        topNameEl.textContent = topData.name || '';
-        
         // Calculate criteria: tickers with score >= 90
         const count90Plus = data.filter(d => d['Total Score'] >= 90).length;
         totalSignalsEl.textContent = `${count90Plus} / ${data.length}`;
@@ -130,9 +123,6 @@ function updateUI(data, topData) {
         const avg = data.reduce((sum, d) => sum + d['Total Score'], 0) / data.length;
         avgScoreEl.textContent = avg.toFixed(1);
     } else {
-        topSignalEl.textContent = '--';
-        topScoreEl.textContent = '--';
-        topNameEl.textContent = 'No data';
         totalSignalsEl.textContent = '0 / 0';
         avgScoreEl.textContent = '--';
     }
