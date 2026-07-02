@@ -477,34 +477,120 @@ tbody tr.high-score-row.selected-row {
     color: #9ca3af;
 }
 
-/* Responsive */
+/* Scrollbar Customization */
+.table-container::-webkit-scrollbar,
+.sidebar::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+.table-container::-webkit-scrollbar-track,
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+.table-container::-webkit-scrollbar-thumb,
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+.table-container::-webkit-scrollbar-thumb:hover,
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.3);
+}
+
+/* Responsive Rules */
 @media (max-width: 1024px) {
     .metric-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
     
     .header {
         flex-direction: column;
-        gap: 1rem;
+        gap: 1.5rem;
+    }
+    
+    .profile-indicator {
+        width: 100%;
+        min-width: auto;
     }
 }
 
 @media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
     .sidebar {
+        position: relative;
+        top: auto;
+        left: auto;
         width: 100%;
         min-height: auto;
-        position: relative;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 1.25rem 1rem;
     }
     
     .main-content {
         margin-left: 0;
         width: 100%;
+        padding: 1.25rem 1rem;
     }
     
-    body {
-        flex-direction: column;
+    .header-left h1 {
+        font-size: 2.25rem;
+    }
+    
+    .header-left p {
+        font-size: 1rem;
+    }
+    
+    .metric-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    #candlestickChart {
+        height: 350px !important;
+    }
+    
+    #rsiChart {
+        height: 150px !important;
+    }
+    
+    .table-container {
+        padding: 0.75rem;
+    }
+    
+    thead th, tbody td {
+        padding: 0.6rem;
+        font-size: 0.85rem;
     }
 }
+
+@media (max-width: 480px) {
+    .distribution-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .toggle-group {
+        width: 100%;
+    }
+    
+    .toggle-btn {
+        flex: 1;
+        text-align: center;
+        padding: 0.35rem 0.5rem;
+    }
+    
+    .profile-weights {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+
 
 /* Distribution Pie Chart Section */
 .distribution-section {
